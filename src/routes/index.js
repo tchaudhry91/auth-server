@@ -58,6 +58,10 @@ router.post(
   '/anonymous',
   c(auth.anonymousAccess, req => [req.cookies, req.query.redirect])
 );
+router.get(
+  '/anonymous.gif',
+  auth.anonymousAccessGIF
+);
 router.post(
   '/intercom-user-hash',
   c(auth.intercomUserHash, req => [req.cookies])

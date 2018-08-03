@@ -15,6 +15,10 @@ import {
 import {
   generateIntercomHash
 } from '../helpers/intercom';
+import fs from 'fs';
+import path from 'path';
+
+const pixel = fs.readFileSync(path.join(__dirname, '../assets/pixel.gif'))
 
 function getAuthResponseCookies(token) {
   return [{
@@ -45,6 +49,42 @@ async function finalizeKeycloakAuth(user, cookies) {
   };
 }
 
+async function anonymousAccessGIF(req, res, next) {
+  let resCookies = [];
+  const cookieName = config.jwt.cookieName;
+  const existingToken = req.cookies[cookieName];
+  let user;
+  if (existingToken) {
+    let decoded;
+    try {
+      decoded = decodeToken(existingToken);
+    } catch (error) {}
+
+    if (decoded && decoded.user_id) {
+      user = await User.findOne({
+        _id: decoded.user_id
+      }).exec();
+    }
+  }
+
+  if (!user) {
+    user = await User.createDumpUser();
+    const jwtToken = generateToken(user);
+    resCookies = getAuthResponseCookies(jwtToken);
+  }
+
+  for (let cookie of resCookies) {
+    const {
+      name,
+      value,
+      options
+    } = cookie;
+    res.cookie(name, value, options);
+  }
+
+  res.end(pixel);
+}
+
 async function anonymousAccess(cookies, redirect) {
   const cookieName = config.jwt.cookieName;
   const existingToken = cookies[cookieName];
@@ -55,13 +95,10 @@ async function anonymousAccess(cookies, redirect) {
       decoded = decodeToken(existingToken);
     } catch (error) {}
 
-    if (decoded && decoded._id) {
+    if (decoded && decoded.user_id) {
       user = await User.findOne({
-        _id: decoded._id
+        _id: decoded.user_id
       }).exec();
-      if (user) {
-        console.log('Found user with ID:', user._id);
-      }
     }
   }
 
@@ -112,6 +149,7 @@ async function intercomUserHash(cookies) {
 
 module.exports = {
   anonymousAccess,
+  anonymousAccessGIF,
   intercomUserHash,
   finalizeKeycloakAuth
 };
