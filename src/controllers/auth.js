@@ -41,6 +41,33 @@ function getAuthResponseCookies(token) {
   ];
 }
 
+function clearAuthCookies() {
+  return [{
+      name: config.jwt.cookieName,
+      value: '',
+      options: {
+        expire: new Date(new Date() - 30 * 24 * 60 * 60 * 1000),
+        httpOnly: true,
+        domain: config.cookies.domain
+      }
+    },
+    {
+      name: config.userDataCookieName,
+      value: '',
+      options: {
+        expire: new Date(new Date() - 30 * 24 * 60 * 60 * 1000),
+        domain: config.cookies.domain
+      }
+    }
+  ];
+}
+
+async function logout() {
+  return {
+    cookies: clearAuthCookies()
+  }
+}
+
 async function finalizeKeycloakAuth(user, cookies) {
   const jwtToken = generateToken(user);
   return {
@@ -148,6 +175,7 @@ async function intercomUserHash(cookies) {
 }
 
 module.exports = {
+  logout,
   anonymousAccess,
   anonymousAccessGIF,
   intercomUserHash,

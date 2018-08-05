@@ -88,6 +88,11 @@ router.get(
   c(auth.finalizeKeycloakAuth, req => [req.user, req.cookies])
 );
 
+router.post(
+  '/me/logout',
+  c(auth.logout, req => [req.cookies])
+);
+
 /**
  * Error-handler.
  */
