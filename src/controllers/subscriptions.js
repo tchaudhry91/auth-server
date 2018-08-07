@@ -3,7 +3,8 @@ import User from '../models/user-model';
 import {
   ServerError,
   ForbiddenError,
-  BadRequestError
+  BadRequestError,
+  NotFoundError
 } from '../helpers/server';
 import {
   getStringByLocale
@@ -25,8 +26,51 @@ import {
   isAcceptedCurrencyCode
 } from '../helpers/currencies';
 import {
-  isValidPlanCode
+  isValidPlanCode,
+  planCodesToSubscriptionLvl
 } from '../helpers/zoho-subscriptions';
+
+async function zohoPostEvent(apiKey, body) {
+  if (apiKey !== config.zoho.eventsApiKey) {
+    return Promise.reject(ForbiddenError());
+  }
+  if (!body) {
+    return Promise.reject(BadRequestError());
+  }
+  const eventData = body.data;
+  const eventType = body.event_type;
+  if (!eventType || !eventData) {
+    return Promise.reject(BadRequestError());
+  }
+  const eventSubscription = eventData.subscription;
+  if (!eventSubscription) {
+    return Promise.reject(BadRequestError());
+  }
+  const customerId = eventSubscription.customer.customer_id;
+  const planCode = eventSubscription.plan.plan_code;
+  const subStatus = eventSubscription.status;
+
+  if (!isValidPlanCode(planCode)) {
+    // This is for an unrelated service then
+    console.warn('Received invalid plan code on Zoho Subscriptions webhook. Assuming that this if for another service/application.');
+    return {}
+  }
+
+  let dbUser = await User.findOne({
+    zoho_customer_id: customerId
+  });
+
+  if (!dbUser) {
+    return Promise.reject(NotFoundError());
+  }
+
+  if (subStatus === 'live' || subStatus === 'trial') {
+    dbUser.subscription[0].level = planCodesToSubscriptionLvl[planCode]
+  } else {
+    dbUser.subscription[0].level = 1
+  }
+  await dbUser.save()
+}
 
 async function createHostedPageForSubscription(cookies, planCode, ccy) {
   const tknStr = cookies[config.jwt.cookieName];
@@ -88,5 +132,6 @@ async function createHostedPageForSubscription(cookies, planCode, ccy) {
 }
 
 module.exports = {
-  createHostedPageForSubscription
+  createHostedPageForSubscription,
+  zohoPostEvent
 };

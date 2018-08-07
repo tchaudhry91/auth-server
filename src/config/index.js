@@ -75,6 +75,7 @@ module.exports = {
     apiBaseUrl: "https://billing.exlinc.com/api/v1/",
     orgId: process.env.ZOHO_ORG_ID || "set_me",
     authToken: process.env.ZOHO_AUTH_TOKEN || "set_me",
+    eventsApiKey: process.env.ZOHO_EVENTS_API_KEY || "set_me",
     plans: {
       essentials: {
         level: 3000,

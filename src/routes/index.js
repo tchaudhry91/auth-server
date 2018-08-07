@@ -93,6 +93,11 @@ router.post(
   c(auth.logout, req => [req.cookies])
 );
 
+router.post(
+  '/zoho/subscriptions/events',
+  c(subscriptions.zohoPostEvent, req => [req.query.apiKey, req.body])
+);
+
 /**
  * Error-handler.
  */
