@@ -72,6 +72,39 @@ async function zohoPostEvent(apiKey, body) {
   await dbUser.save()
 }
 
+async function redirectToHostedPageForSubscription(cookies, planCode, ccy) {
+  const tknStr = cookies[config.jwt.cookieName];
+  if (!tknStr) {
+    return {
+      redirect: `/auth/keycloak?redirect=/subscriptions/hostedpages/redirect?planCode=${encodeURIComponent(planCode)}&ccy=${encodeURIComponent(ccy)}`
+    }
+  }
+
+  let token;
+  try {
+    token = decodeToken(tknStr);
+  } catch (error) {
+    return {
+      redirect: `/auth/keycloak?redirect=/subscriptions/hostedpages/redirect?planCode=${encodeURIComponent(planCode)}&ccy=${encodeURIComponent(ccy)}`
+    }
+  }
+
+  if (!token || !token.user_id || !token.email || token.is_demo || !token.is_verified) {
+    return {
+      redirect: `/auth/keycloak?redirect=/subscriptions/hostedpages/redirect?planCode=${encodeURIComponent(planCode)}&ccy=${encodeURIComponent(ccy)}`
+    }
+  }
+
+  try {
+    let respObj = await createHostedPageForSubscription(cookies, planCode, ccy);
+    return {
+      redirect: respObj.pageUrl
+    }
+  } catch (err) {
+    return Promise.reject(err)
+  }
+}
+
 async function createHostedPageForSubscription(cookies, planCode, ccy) {
   const tknStr = cookies[config.jwt.cookieName];
   if (!tknStr) {
@@ -132,6 +165,7 @@ async function createHostedPageForSubscription(cookies, planCode, ccy) {
 }
 
 module.exports = {
+  redirectToHostedPageForSubscription,
   createHostedPageForSubscription,
   zohoPostEvent
 };

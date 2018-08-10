@@ -112,6 +112,35 @@ async function anonymousAccessGIF(req, res, next) {
   res.end(pixel);
 }
 
+async function jwtRefresh(cookies) {
+  const existingToken = cookies[config.jwt.cookieName];
+  let user;
+  if (existingToken) {
+    let decoded;
+    try {
+      decoded = decodeToken(existingToken);
+    } catch (error) {
+      return Promise.reject(ForbiddenError());
+    }
+
+    if (decoded && decoded.user_id) {
+      try {
+        user = await User.findOne({
+          _id: decoded.user_id
+        }).exec();
+      } catch (error) {
+        return Promise.reject(ForbiddenError());
+      }
+    }
+  } else {
+    return Promise.reject(ForbiddenError());
+  }
+  const refreshedJwtToken = generateToken(user);
+  return {
+    cookies: getAuthResponseCookies(refreshedJwtToken)
+  };
+}
+
 async function anonymousAccess(cookies, redirect) {
   const cookieName = config.jwt.cookieName;
   const existingToken = cookies[cookieName];
@@ -176,6 +205,7 @@ async function intercomUserHash(cookies) {
 
 module.exports = {
   logout,
+  jwtRefresh,
   anonymousAccess,
   anonymousAccessGIF,
   intercomUserHash,

@@ -62,6 +62,10 @@ router.get(
   '/anonymous.gif',
   auth.anonymousAccessGIF
 );
+router.get(
+  '/auth/jwt-refresh',
+  c(auth.jwtRefresh, req => [req.cookies])
+);
 router.post(
   '/intercom-user-hash',
   c(auth.intercomUserHash, req => [req.cookies])
@@ -69,6 +73,10 @@ router.post(
 router.get(
   '/subscriptions/hostedpages',
   c(subscriptions.createHostedPageForSubscription, req => [req.cookies, req.query.planCode, req.query.ccy])
+);
+router.get(
+  '/subscriptions/hostedpages/redirect',
+  c(subscriptions.redirectToHostedPageForSubscription, req => [req.cookies, req.query.planCode, req.query.ccy])
 );
 router.get(
   '/health-check',

@@ -79,28 +79,28 @@ module.exports = {
     plans: {
       essentials: {
         level: 3000,
-        annual: {
+        monthly: {
           planCode: "EXLskills-008"
         },
-        monthly: {
+        annual: {
           planCode: "EXLskills-009"
         }
       },
       professional: {
         level: 5000,
-        annual: {
+        monthly: {
           planCode: "EXLskills-010"
         },
-        monthly: {
+        annual: {
           planCode: "EXLskills-011"
         }
       },
       business: {
         level: 7000,
-        annual: {
+        monthly: {
           planCode: "EXLskills-012"
         },
-        monthly: {
+        annual: {
           planCode: "EXLskills-015"
         }
       }
