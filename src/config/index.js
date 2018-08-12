@@ -71,6 +71,10 @@ module.exports = {
     avatarUrl: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=robohash"
   },
 
+  exlInternalAPI: {
+    key: process.env.EXL_INTERNAL_QUERY_API_KEY || 'set_me'
+  },
+
   zoho: {
     apiBaseUrl: "https://billing.exlinc.com/api/v1/",
     orgId: process.env.ZOHO_ORG_ID || "set_me",

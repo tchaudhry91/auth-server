@@ -12,7 +12,8 @@ const router = express.Router();
 const {
   auth,
   subscriptions,
-  healthCheck
+  healthCheck,
+  exlAPI
 } = controllers;
 
 /**
@@ -82,6 +83,10 @@ router.get(
   '/health-check',
   c(healthCheck.healthCheckIndex, req => [])
 );
+router.get(
+  '/exl/users/:userId/subscription',
+  c(exlAPI.getUserSubscriptionLevel, req => [req.query.apiKey, req.params.userId])
+)
 
 router.get('/auth/keycloak', (req, res) => {
   if (req.query.redirect) {
