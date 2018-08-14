@@ -27,8 +27,19 @@ import {
 } from '../helpers/currencies';
 import {
   isValidPlanCode,
-  planCodesToSubscriptionLvl
+  planCodesToSubscriptionLvl,
+  planCodesToParams,
+  parseZohoDate
 } from '../helpers/zoho-subscriptions';
+import {
+  createBoosts
+} from '../botmanagerapi/create-boosts';
+
+Date.prototype.addDays = function (days) {
+  var date = new Date(this.valueOf());
+  date.setDate(date.getDate() + days);
+  return date;
+}
 
 async function zohoPostEvent(apiKey, body) {
   if (apiKey !== config.zoho.eventsApiKey) {
@@ -49,6 +60,7 @@ async function zohoPostEvent(apiKey, body) {
   const customerId = eventSubscription.customer.customer_id;
   const planCode = eventSubscription.plan.plan_code;
   const subStatus = eventSubscription.status;
+  const nextBillingDate = parseZohoDate(eventSubscription.next_billing_at);
 
   if (!isValidPlanCode(planCode)) {
     // This is for an unrelated service then
@@ -62,6 +74,16 @@ async function zohoPostEvent(apiKey, body) {
 
   if (!dbUser) {
     return Promise.reject(NotFoundError());
+  }
+
+  if (eventType === 'subscription_renewed') {
+    // When subscriptions renew, we add monthly benefits that expire by the next billing cycle
+    try {
+      // NOTE: Divide the date difference by 1000 because JS uses milliseconds while the API takes seconds
+      await createBoosts(dbUser._id, planCodesToParams[planCode].boostsPerCycle, Math.round((nextBillingDate.getTime() - (new Date()).getTime()) / 1000))
+    } catch (error) {
+      console.error("ERROR CREATING BOOSTS FOR USER: ", dbUser._id, ". Supposed to add ", planCodesToParams[planCode].boostsPerCycle, " boosts that would expire by ", nextBillingDate, "(", eventSubscription.next_billing_at, "). Error reported: ", error);
+    }
   }
 
   if (subStatus === 'live' || subStatus === 'trial') {

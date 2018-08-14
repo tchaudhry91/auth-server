@@ -75,6 +75,11 @@ module.exports = {
     key: process.env.EXL_INTERNAL_QUERY_API_KEY || 'set_me'
   },
 
+  botManagerAPI: {
+    key: process.env.BOT_MANAGER_API_KEY || 'set_me',
+    url: process.env.BOT_MANAGER_API_URL || 'http://localhost:2999'
+  },
+
   zoho: {
     apiBaseUrl: "https://billing.exlinc.com/api/v1/",
     orgId: process.env.ZOHO_ORG_ID || "set_me",
@@ -84,28 +89,34 @@ module.exports = {
       essentials: {
         level: 3000,
         monthly: {
-          planCode: "EXLskills-008"
+          planCode: "EXLskills-008",
+          boostsPerCycle: 2
         },
         annual: {
-          planCode: "EXLskills-009"
+          planCode: "EXLskills-009",
+          boostsPerCycle: 24
         }
       },
       professional: {
         level: 5000,
         monthly: {
-          planCode: "EXLskills-010"
+          planCode: "EXLskills-010",
+          boostsPerCycle: 2
         },
         annual: {
-          planCode: "EXLskills-011"
+          planCode: "EXLskills-011",
+          boostsPerCycle: 24
         }
       },
       business: {
         level: 7000,
         monthly: {
-          planCode: "EXLskills-012"
+          planCode: "EXLskills-012",
+          boostsPerCycle: 2
         },
         annual: {
-          planCode: "EXLskills-015"
+          planCode: "EXLskills-015",
+          boostsPerCycle: 24
         }
       }
     }
