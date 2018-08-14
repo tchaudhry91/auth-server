@@ -9,7 +9,6 @@ const hostedPageNewSubUrl = getApiUrlForResource('/hostedpages/newsubscription')
 
 export async function createNewSubscriptionPage(customerId, planCode) {
   if (!customerId || !planCode) {
-    console.log(customerId, planCode);
     return Promise.reject('invalid hosted page parameters');
   }
   try {

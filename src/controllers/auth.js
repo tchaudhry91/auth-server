@@ -1,7 +1,6 @@
 import config from '../config';
 import User from '../models/user-model';
 import {
-  ServerError,
   ForbiddenError
 } from '../helpers/server';
 import {

@@ -16,3 +16,7 @@ export const BadRequestError = msg => {
 export const NotFoundError = msg => {
   return new ServerError(msg ? msg : 'Not found', 404);
 };
+
+export const InternalServerError = msg => {
+  return new ServerError(msg ? msg : 'Internal server error', 500);
+}

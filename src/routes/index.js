@@ -86,8 +86,11 @@ router.get(
 router.get(
   '/exl/users/:userId/subscription',
   c(exlAPI.getUserSubscriptionLevel, req => [req.query.apiKey, req.params.userId])
-)
-
+);
+router.post(
+  '/exl/users/:userId/charges',
+  c(exlAPI.addChargeToUser, req => [req.query.apiKey, req.params.userId, req.body])
+);
 router.get('/auth/keycloak', (req, res) => {
   if (req.query.redirect) {
     res.cookie('kc_lgn_success_redir', req.query.redirect, {});
