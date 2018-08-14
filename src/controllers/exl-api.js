@@ -109,7 +109,7 @@ async function addChargeToUser(apiKey, userID, reqObj) {
 
     const invoice = await addChargeToSubscription(activeSubs[0].subscription_id, chargeAmtUSD, chargeDescription);
     return {
-      "invoice_id": invoice.invoice_id
+      "invoiceId": invoice.invoice_id
     }
   } catch (error) {
     console.log(error)
