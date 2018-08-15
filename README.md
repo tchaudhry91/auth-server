@@ -34,6 +34,15 @@ With MongoDB running, start the local server:
 npm start
 ```
 
+### Configuration
+
+The process obtains required configuration information from `.env` file located in the installation root directory and / or from the OS Environment Variables.   
+
+Copy the sample `.default.env` into `.env` and set the necessary values, e.g., for local testing, set
+```
+KEYCLOAK_HOST='http://localhost:8082'
+```
+
 ## License
 
 This software is offered under the terms outlined in the [LICENSE.md](LICENSE.md) file provided with this notice. If you have any questions regarding the license, please contact [licensing@exlinc.com](mailto:licensing@exlinc.com)
