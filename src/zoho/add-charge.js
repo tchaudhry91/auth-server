@@ -18,7 +18,7 @@ export async function addChargeToSubscription(subscriptionId, amtUSD, descriptio
   try {
     const {
       data
-    } = await zohoApiClient.post(subscriptionChargeBaseURL + customerId + '/charge', {
+    } = await zohoApiClient.post(subscriptionChargeBaseURL + subscriptionId + '/charge', {
       "amount": amtUSD,
       "description": description
     });
