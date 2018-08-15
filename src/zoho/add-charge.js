@@ -9,7 +9,7 @@ import {
   zohoApiClient
 } from "./api-client";
 
-const subscriptionChargeBaseURL = getApiUrlForResource('/subscriptions');
+const subscriptionChargeBaseURL = getApiUrlForResource('/subscriptions/');
 
 export async function addChargeToSubscription(subscriptionId, amtUSD, description) {
   if (!subscriptionId || !amtUSD || !description) {
