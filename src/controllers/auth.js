@@ -1,26 +1,21 @@
 import config from '../config';
 import User from '../models/user-model';
-import {
-  ForbiddenError
-} from '../helpers/server';
-import {
-  getStringByLocale
-} from '../helpers/intl-string';
+import { ForbiddenError } from '../helpers/server';
+import { getStringByLocale } from '../helpers/intl-string';
 import {
   getRawDataPartFromToken,
   generateToken,
   decodeToken
 } from '../helpers/jwt';
-import {
-  generateIntercomHash
-} from '../helpers/intercom';
+import { generateIntercomHash } from '../helpers/intercom';
 import fs from 'fs';
 import path from 'path';
 
-const pixel = fs.readFileSync(path.join(__dirname, '../assets/pixel.gif'))
+const pixel = fs.readFileSync(path.join(__dirname, '../assets/pixel.gif'));
 
 function getAuthResponseCookies(token) {
-  return [{
+  return [
+    {
       name: config.jwt.cookieName,
       value: token,
       options: {
@@ -41,7 +36,8 @@ function getAuthResponseCookies(token) {
 }
 
 function clearAuthCookies() {
-  return [{
+  return [
+    {
       name: config.jwt.cookieName,
       value: '',
       options: {
@@ -64,7 +60,7 @@ function clearAuthCookies() {
 async function logout() {
   return {
     cookies: clearAuthCookies()
-  }
+  };
 }
 
 async function finalizeKeycloakAuth(user, cookies) {
@@ -87,9 +83,12 @@ async function anonymousAccessGIF(req, res, next) {
     } catch (error) {}
 
     if (decoded && decoded.user_id) {
+      // The returned object is not used except to check if it was found
       user = await User.findOne({
         _id: decoded.user_id
-      }).exec();
+      })
+        .select({ _id: 1 })
+        .exec();
     }
   }
 
@@ -100,11 +99,7 @@ async function anonymousAccessGIF(req, res, next) {
   }
 
   for (let cookie of resCookies) {
-    const {
-      name,
-      value,
-      options
-    } = cookie;
+    const { name, value, options } = cookie;
     res.cookie(name, value, options);
   }
 
@@ -123,10 +118,24 @@ async function jwtRefresh(cookies) {
     }
 
     if (decoded && decoded.user_id) {
+      // See generateToken for the list of User fields required
       try {
         user = await User.findOne({
           _id: decoded.user_id
-        }).exec();
+        })
+          .select({
+            _id: 1,
+            primary_locale: 1,
+            primary_email: 1,
+            avatar_url: 1,
+            full_name: 1,
+            username: 1,
+            is_demo: 1,
+            has_completed_first_tutorial: 1,
+            is_verified: 1,
+            subscription: 1
+          })
+          .exec();
       } catch (error) {
         return Promise.reject(ForbiddenError());
       }
@@ -151,9 +160,18 @@ async function anonymousAccess(cookies, redirect) {
     } catch (error) {}
 
     if (decoded && decoded.user_id) {
+      // See "resonse" below for the list of User fields required
       user = await User.findOne({
         _id: decoded.user_id
-      }).exec();
+      })
+        .select({
+          _id: 1,
+          full_name: 1,
+          primary_locale: 1,
+          avatar_url: 1,
+          subscription: 1
+        })
+        .exec();
     }
   }
 

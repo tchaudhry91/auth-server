@@ -1,1 +1,6 @@
-.env
+*
+!.babelrc
+!Dockerfile
+!LICENSE.md
+!package.json
+!src/

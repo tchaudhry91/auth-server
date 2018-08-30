@@ -28,7 +28,7 @@ module.exports = {
   },
 
   cookies: {
-    domain: process.env.COOKIES_DOMAIN || 'localhost',
+    domain: process.env.COOKIES_DOMAIN || 'localhost'
   },
 
   service: {
@@ -41,7 +41,9 @@ module.exports = {
     url: process.env.CLIENT_URL || 'http://localhost:4000'
   },
 
-  cors_origin: process.env.CORS_REGEX ? [new RegExp(process.env.CORS_REGEX)] : [/localhost/, /exlskills.com/, /\.exlskills\.com$/],
+  cors_origin: process.env.CORS_REGEX
+    ? [new RegExp(process.env.CORS_REGEX)]
+    : [/localhost/, /exlskills.com/, /\.exlskills\.com$/],
 
   intercom: {
     idVerificationSecret: process.env.IC_SECRET || 'set_me'
@@ -49,8 +51,12 @@ module.exports = {
 
   jwt: {
     cookieName: process.env.JWT_COOKIE_NAME || 'token',
-    publicKeyFile: process.env.JWT_PUB_KEY_FILE || path.join(__dirname, '../config/sample_keys/public_key.pem'),
-    privateKeyFile: process.env.JWT_PRIV_KEY_FILE || path.join(__dirname, '../config/sample_keys/private_key.pem'),
+    publicKeyFile:
+      process.env.JWT_PUB_KEY_FILE ||
+      path.join(__dirname, '../config/sample_keys/public_key.pem'),
+    privateKeyFile:
+      process.env.JWT_PRIV_KEY_FILE ||
+      path.join(__dirname, '../config/sample_keys/private_key.pem'),
     publicKeyBase64: process.env.JWT_PUB_KEY_B64 || '',
     privateKeyBase64: process.env.JWT_PRIV_KEY_B64 || ''
   },
@@ -68,7 +74,8 @@ module.exports = {
   },
 
   demoUser: {
-    avatarUrl: "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=robohash"
+    avatarUrl:
+      'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=robohash'
   },
 
   exlInternalAPI: {
@@ -81,44 +88,51 @@ module.exports = {
   },
 
   zoho: {
-    apiBaseUrl: "https://billing.exlinc.com/api/v1/",
-    orgId: process.env.ZOHO_ORG_ID || "set_me",
-    authToken: process.env.ZOHO_AUTH_TOKEN || "set_me",
-    eventsApiKey: process.env.ZOHO_EVENTS_API_KEY || "set_me",
+    apiBaseUrl: 'https://billing.exlinc.com/api/v1/',
+    orgId: process.env.ZOHO_ORG_ID || 'set_me',
+    authToken: process.env.ZOHO_AUTH_TOKEN || 'set_me',
+    eventsApiKey: process.env.ZOHO_EVENTS_API_KEY || 'set_me',
     plans: {
       essentials: {
         level: 3000,
         monthly: {
-          planCode: "EXLskills-008",
+          planCode: 'EXLskills-008',
           boostsPerCycle: 2
         },
         annual: {
-          planCode: "EXLskills-009",
+          planCode: 'EXLskills-009',
           boostsPerCycle: 24
         }
       },
       professional: {
         level: 5000,
         monthly: {
-          planCode: "EXLskills-010",
+          planCode: 'EXLskills-010',
           boostsPerCycle: 2
         },
         annual: {
-          planCode: "EXLskills-011",
+          planCode: 'EXLskills-011',
           boostsPerCycle: 24
         }
       },
       business: {
         level: 7000,
         monthly: {
-          planCode: "EXLskills-012",
+          planCode: 'EXLskills-012',
           boostsPerCycle: 2
         },
         annual: {
-          planCode: "EXLskills-015",
+          planCode: 'EXLskills-015',
           boostsPerCycle: 24
         }
       }
     }
-  }
+  },
+
+  logging_level:
+    process.env.LOGGING_LEVEL ||
+    (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+  db_debug_log:
+    process.env.DB_DEBUG_LOG ||
+    (process.env.NODE_ENV === 'production' ? false : true)
 };

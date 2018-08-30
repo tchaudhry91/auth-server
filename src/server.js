@@ -4,24 +4,17 @@ import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import connectMemcached from 'connect-memcached';
-import morgan from 'morgan';
 import config from './config';
 import passport from 'passport';
 import cors from 'cors';
 import KeycloakStrategy from '@exlinc/keycloak-passport';
 import User from './models/user-model';
-import log from './helpers/log';
 import databases from './databases';
 import routes from './routes';
-import {
-  decodeToken
-} from './helpers/jwt';
-import {
-  decode
-} from 'punycode';
-import {
-  generateGravatarUrlForEmail
-} from './helpers/gravatar';
+import { decodeToken } from './helpers/jwt';
+import { decode } from 'punycode';
+import { generateGravatarUrlForEmail } from './helpers/gravatar';
+import { logger } from './utils/logger';
 
 const PORT = config.service.port;
 
@@ -75,11 +68,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Session serializers
-passport.serializeUser(function (user, done) {
+passport.serializeUser(function(user, done) {
   done(null, user);
 });
 
-passport.deserializeUser(function (user, done) {
+passport.deserializeUser(function(user, done) {
   done(null, user);
 });
 
@@ -98,8 +91,10 @@ passport.use(
       // This is called after a successful authentication has been completed
       let user;
       try {
+        // method, profile, userId
         user = await User.authenticate(
-          'keycloak', {
+          'keycloak',
+          {
             id: profile.keycloakId,
             email: profile.email,
             avatar: generateGravatarUrlForEmail(profile.email),
@@ -117,21 +112,12 @@ passport.use(
   )
 );
 
-// Logging (debug only).
-app.use(
-  morgan('combined', {
-    stream: {
-      write: msg => log.info(msg)
-    }
-  })
-);
-
 // URLs.
 app.use('/', routes);
 
 server.listen(PORT);
-log.info('-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-');
-log.info(`🌐  API listening on port ${PORT}`);
-log.info('-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-');
+logger.info('-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-');
+logger.info(`🌐  API listening on port ${PORT}`);
+logger.info('-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-');
 
 module.exports = server;

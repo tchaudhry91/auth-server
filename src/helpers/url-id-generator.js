@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 const curses = [
   '6675636B',
   '73686974',
@@ -97,12 +99,12 @@ export const id_gen = function() {
   do {
     const date_stamp = get_second_into_year();
     const first_25_bits = convertBase(date_stamp.toString(), 10, 62);
-    // console.log(first_25_bits)
+    // logger.debug(first_25_bits)
     let next_42_bits = convertBase(getRandBinaryBits(42), 2, 62);
     if (next_42_bits.length > 7) {
       next_42_bits = next_42_bits.substring(0, 7);
     }
-    // console.log(next_42_bits)
+    // logger.debug(next_42_bits)
     const final_bits_id = first_25_bits + next_42_bits;
     code = final_bits_id;
     if (code.length < 12) {

@@ -6,20 +6,9 @@ import {
   BadRequestError,
   NotFoundError
 } from '../helpers/server';
-import {
-  getStringByLocale
-} from '../helpers/intl-string';
-import {
-  getRawDataPartFromToken,
-  generateToken,
-  decodeToken
-} from '../helpers/jwt';
-import {
-  getAllActiveSubscriptionsForCustomer
-} from '../zoho/subscriptions';
-import {
-  addChargeToSubscription
-} from '../zoho/add-charge';
+import { getAllActiveSubscriptionsForCustomer } from '../zoho/subscriptions';
+import { addChargeToSubscription } from '../zoho/add-charge';
+import { logger } from '../utils/logger';
 
 async function getUserSubscriptionLevel(apiKey, userID) {
   if (!apiKey || apiKey !== config.exlInternalAPI.key) {
@@ -31,13 +20,13 @@ async function getUserSubscriptionLevel(apiKey, userID) {
   try {
     let dbUser = await User.findOne({
       _id: userID
-    });
+    }).select({ subscription: 1 });
 
     if (!dbUser) {
       return Promise.reject(NotFoundError());
     }
 
-    if (!dbUser.subscription || dbUser.subscription.length == 0) {
+    if (!dbUser.subscription || dbUser.subscription.length === 0) {
       return {
         subscriptionLevel: 0
       };
@@ -54,17 +43,13 @@ async function getUserSubscriptionLevel(apiKey, userID) {
     return {
       subscriptionLevel: mostPrivilegedSubscriptionLevel
     };
-
   } catch (error) {
     return Promise.reject(new ServerError());
   }
 }
 
 async function addChargeToUser(apiKey, userID, reqObj) {
-  const {
-    chargeAmtUSD,
-    chargeDescription
-  } = reqObj
+  const { chargeAmtUSD, chargeDescription } = reqObj;
   if (!apiKey || apiKey !== config.exlInternalAPI.key) {
     return Promise.reject(ForbiddenError());
   }
@@ -74,13 +59,13 @@ async function addChargeToUser(apiKey, userID, reqObj) {
   try {
     let dbUser = await User.findOne({
       _id: userID
-    });
+    }).select({ subscription: 1, zoho_customer_id: 1 });
 
     if (!dbUser) {
       return Promise.reject(NotFoundError());
     }
 
-    if (!dbUser.subscription || dbUser.subscription.length == 0) {
+    if (!dbUser.subscription || dbUser.subscription.length === 0) {
       return {
         subscriptionLevel: 0
       };
@@ -102,17 +87,23 @@ async function addChargeToUser(apiKey, userID, reqObj) {
       return Promise.reject(BadRequestError());
     }
 
-    const activeSubs = await getAllActiveSubscriptionsForCustomer(dbUser.zoho_customer_id);
+    const activeSubs = await getAllActiveSubscriptionsForCustomer(
+      dbUser.zoho_customer_id
+    );
     if (!activeSubs || activeSubs.length < 1) {
       return Promise.reject(BadRequestError());
     }
 
-    const invoice = await addChargeToSubscription(activeSubs[0].subscription_id, chargeAmtUSD, chargeDescription);
+    const invoice = await addChargeToSubscription(
+      activeSubs[0].subscription_id,
+      chargeAmtUSD,
+      chargeDescription
+    );
     return {
-      "invoiceId": invoice.invoice_id
-    }
+      invoiceId: invoice.invoice_id
+    };
   } catch (error) {
-    console.log(error)
+    logger.error(error);
     return Promise.reject(InternalServerError());
   }
 }

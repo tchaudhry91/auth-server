@@ -1,20 +1,13 @@
 import express from 'express';
-import log from '../helpers/log';
 import config from '../config';
 import passport from 'passport';
-import User from '../models/user-model';
-import {
-  ServerError
-} from '../helpers/server';
+import { ServerError } from '../helpers/server';
+import { logger } from '../utils/logger';
+
 const controllers = require('../controllers');
 
 const router = express.Router();
-const {
-  auth,
-  subscriptions,
-  healthCheck,
-  exlAPI
-} = controllers;
+const { auth, subscriptions, healthCheck, exlAPI } = controllers;
 
 /**
  * Handles controller execution and responds to user (API version).
@@ -29,11 +22,7 @@ const controllerHandler = (promise, params) => async (req, res, next) => {
     const result = await promise(...boundParams);
     if (result && result.cookies) {
       for (let cookie of result.cookies) {
-        const {
-          name,
-          value,
-          options
-        } = cookie;
+        const { name, value, options } = cookie;
         res.cookie(name, value, options);
       }
       // delete result.cookies;
@@ -59,37 +48,43 @@ router.post(
   '/anonymous',
   c(auth.anonymousAccess, req => [req.cookies, req.query.redirect])
 );
-router.get(
-  '/anonymous.gif',
-  auth.anonymousAccessGIF
-);
-router.get(
-  '/auth/jwt-refresh',
-  c(auth.jwtRefresh, req => [req.cookies])
-);
+router.get('/anonymous.gif', auth.anonymousAccessGIF);
+router.get('/auth/jwt-refresh', c(auth.jwtRefresh, req => [req.cookies]));
 router.post(
   '/intercom-user-hash',
   c(auth.intercomUserHash, req => [req.cookies])
 );
 router.get(
   '/subscriptions/hostedpages',
-  c(subscriptions.createHostedPageForSubscription, req => [req.cookies, req.query.planCode, req.query.ccy])
+  c(subscriptions.createHostedPageForSubscription, req => [
+    req.cookies,
+    req.query.planCode,
+    req.query.ccy
+  ])
 );
 router.get(
   '/subscriptions/hostedpages/redirect',
-  c(subscriptions.redirectToHostedPageForSubscription, req => [req.cookies, req.query.planCode, req.query.ccy])
+  c(subscriptions.redirectToHostedPageForSubscription, req => [
+    req.cookies,
+    req.query.planCode,
+    req.query.ccy
+  ])
 );
-router.get(
-  '/health-check',
-  c(healthCheck.healthCheckIndex, req => [])
-);
+router.get('/health-check', c(healthCheck.healthCheckIndex, req => []));
 router.get(
   '/exl/users/:userId/subscription',
-  c(exlAPI.getUserSubscriptionLevel, req => [req.query.apiKey, req.params.userId])
+  c(exlAPI.getUserSubscriptionLevel, req => [
+    req.query.apiKey,
+    req.params.userId
+  ])
 );
 router.post(
   '/exl/users/:userId/charges',
-  c(exlAPI.addChargeToUser, req => [req.query.apiKey, req.params.userId, req.body])
+  c(exlAPI.addChargeToUser, req => [
+    req.query.apiKey,
+    req.params.userId,
+    req.body
+  ])
 );
 router.get('/auth/keycloak', (req, res) => {
   if (req.query.redirect) {
@@ -104,10 +99,7 @@ router.get(
   c(auth.finalizeKeycloakAuth, req => [req.user, req.cookies])
 );
 
-router.post(
-  '/me/logout',
-  c(auth.logout, req => [req.cookies])
-);
+router.post('/me/logout', c(auth.logout, req => [req.cookies]));
 
 router.post(
   '/zoho/subscriptions/events',
@@ -126,9 +118,9 @@ router.use((err, req, res, _next) => {
     });
   }
 
-  log.error('~~~ Unexpected error exception start ~~~');
-  log.error(err);
-  log.error('~~~ Unexpected error exception end ~~~');
+  logger.error('~~~ Unexpected error exception start ~~~');
+  logger.error(err);
+  logger.error('~~~ Unexpected error exception end ~~~');
 
   return res.status(500).json({
     error: 'Internal server error'

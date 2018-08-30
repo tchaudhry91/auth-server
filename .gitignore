@@ -1,7 +1,12 @@
+.DS_Store
+.idea
+.vscode
+
 data
 node_modules
 coverage
 build
 .env
+.docker_run.env
 
 npm-debug.log

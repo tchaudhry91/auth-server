@@ -1,10 +1,5 @@
-import {
-  id_gen
-} from '../helpers/url-id-generator';
-import {
-  decodeToken
-} from '../helpers/jwt';
-import config from '../config'
+import { logger } from '../utils/logger';
+import config from '../config';
 
 const anonymousSuffixes = [
   'Panda',
@@ -52,17 +47,21 @@ function pickRandomAnonymousSuffix() {
 export async function createDumpUser() {
   let user = new this();
   user.avatar_url = config.demoUser.avatarUrl;
-  user.subscription = [{
-    level: 1
-  }];
+  user.subscription = [
+    {
+      level: 1
+    }
+  ];
   user.auth_strategies = [];
   user.is_verified = false;
   user.full_name = {
-    intlString: [{
-      locale: user.primary_locale,
-      content: `Anonymous ${pickRandomAnonymousSuffix()}`,
-      is_default: true
-    }]
+    intlString: [
+      {
+        locale: user.primary_locale,
+        content: `Anonymous ${pickRandomAnonymousSuffix()}`,
+        is_default: true
+      }
+    ]
   };
   user.is_demo = true;
   try {
@@ -77,6 +76,7 @@ export async function createDumpUser() {
 // profile (reqd): the profile data from the auth strategy
 // userId (optional): supplied if we want to add this auth strategy to a user that's already logged in, i.e., elevating an anonymous user
 export async function authenticate(method, profile, userId) {
+  logger.debug(`in authenticate`);
   let user = await this.findOne({
     auth_strategies: {
       $elemMatch: {
@@ -105,20 +105,24 @@ export async function authenticate(method, profile, userId) {
       profile.locale = user.primary_locale; // default locale
     }
     user.full_name = {
-      intlString: [{
-        locale: profile.locale,
-        content: profile.full_name,
-        is_default: true
-      }]
+      intlString: [
+        {
+          locale: profile.locale,
+          content: profile.full_name,
+          is_default: true
+        }
+      ]
     };
     // Note: we ignore usernames in this process since users are coming from accounts.exlinc.com where the username is just the email
     user.is_demo = false;
     user.is_verified = true;
     user.primary_email = profile.email;
     user.primary_locale = profile.locale;
-    user.subscription = [{
-      level: 1
-    }];
+    user.subscription = [
+      {
+        level: 1
+      }
+    ];
     user.avatar_url = profile.avatar;
     user.auth_strategies = [];
   } else {
@@ -131,15 +135,18 @@ export async function authenticate(method, profile, userId) {
     if (!user.primary_email) {
       user.primary_email = profile.email;
     }
-    if (!user.full_name ||
+    if (
+      !user.full_name ||
       user.full_name.intlString[0].content.indexOf('Anonymous') !== -1
     ) {
       user.full_name = {
-        intlString: [{
-          locale: profile.locale,
-          content: profile.full_name,
-          is_default: true
-        }]
+        intlString: [
+          {
+            locale: profile.locale,
+            content: profile.full_name,
+            is_default: true
+          }
+        ]
       };
     }
   }

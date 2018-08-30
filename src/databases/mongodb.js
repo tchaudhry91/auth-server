@@ -1,7 +1,7 @@
+import { logger } from '../utils/logger';
+
 const config = require('../config');
 const mongoose = require('mongoose');
-
-const log = require('../helpers/log');
 
 mongoose.Promise = Promise;
 
@@ -9,39 +9,45 @@ const reconnectTimeout = config.mongo.reconnectTimeout;
 
 function connect() {
   mongoose
-    .connect(config.mongo.uri, {
-      dbName: config.mongo.db,
-      autoReconnect: true
+    .connect(config.mongo.uri + '/' + config.mongo.db, {
+      autoReconnect: true,
+      useNewUrlParser: true
     })
     .catch(() => {});
+
+  // mongoose.set('useCreateIndex', true);
+
+  if (config.db_debug_log) {
+    mongoose.set('debug', true);
+  }
 }
 
 module.exports = () => {
   const db = mongoose.connection;
 
   db.on('connecting', () => {
-    log.dev('Connecting to MongoDB...');
+    logger.info('Connecting to MongoDB...');
   });
 
   db.on('error', err => {
-    log.error(`MongoDB connection error: ${err}`);
+    logger.error(`MongoDB connection error: ${err}`);
     mongoose.disconnect();
   });
 
   db.on('connected', () => {
-    log.dev('Connected to MongoDB!');
+    logger.info('Connected to MongoDB!');
   });
 
   db.once('open', () => {
-    log.dev('MongoDB connection opened!');
+    logger.info('MongoDB connection opened!');
   });
 
   db.on('reconnected', () => {
-    log.dev('MongoDB reconnected!');
+    logger.info('MongoDB reconnected!');
   });
 
   db.on('disconnected', () => {
-    log.error(
+    logger.error(
       `MongoDB disconnected! Reconnecting in ${reconnectTimeout / 1000}s...`
     );
     setTimeout(() => connect(), reconnectTimeout);

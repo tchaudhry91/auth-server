@@ -5,21 +5,13 @@ import {
   BadRequestError,
   NotFoundError
 } from '../helpers/server';
-import {
-  getStringByLocale
-} from '../helpers/intl-string';
-import {
-  getRawDataPartFromToken,
-  generateToken,
-  decodeToken
-} from '../helpers/jwt';
+import { getStringByLocale } from '../helpers/intl-string';
+import { decodeToken } from '../helpers/jwt';
 import {
   createNewCustomer,
   updateCustomerCurrencyCode
 } from '../zoho/customers';
-import {
-  createNewSubscriptionPage
-} from '../zoho/hosted-pages';
+import { createNewSubscriptionPage } from '../zoho/hosted-pages';
 import {
   getDefaultCurrencyCode,
   isAcceptedCurrencyCode
@@ -30,17 +22,17 @@ import {
   planCodesToParams,
   parseZohoDate
 } from '../helpers/zoho-subscriptions';
-import {
-  createBoosts
-} from '../botmanagerapi/create-boosts';
+import { createBoosts } from '../botmanagerapi/create-boosts';
+import { logger } from '../utils/logger';
 
-Date.prototype.addDays = function (days) {
+Date.prototype.addDays = function(days) {
   var date = new Date(this.valueOf());
   date.setDate(date.getDate() + days);
   return date;
-}
+};
 
 async function zohoPostEvent(apiKey, body) {
+  logger.debug(`in zohoPostEvent`);
   if (apiKey !== config.zoho.eventsApiKey) {
     return Promise.reject(ForbiddenError());
   }
@@ -63,13 +55,15 @@ async function zohoPostEvent(apiKey, body) {
 
   if (!isValidPlanCode(planCode)) {
     // This is for an unrelated service then
-    console.warn('Received invalid plan code on Zoho Subscriptions webhook. Assuming that this if for another service/application.');
-    return {}
+    logger.warn(
+      'Received invalid plan code on Zoho Subscriptions webhook. Assuming that this if for another service/application.'
+    );
+    return {};
   }
 
   let dbUser = await User.findOne({
     zoho_customer_id: customerId
-  });
+  }).select({ _id: 1, subscription: 1 });
 
   if (!dbUser) {
     return Promise.reject(NotFoundError());
@@ -79,26 +73,44 @@ async function zohoPostEvent(apiKey, body) {
     // When subscriptions renew, we add monthly benefits that expire by the next billing cycle
     try {
       // NOTE: Divide the date difference by 1000 because JS uses milliseconds while the API takes seconds
-      await createBoosts(dbUser._id, planCodesToParams[planCode].boostsPerCycle, Math.round((nextBillingDate.getTime() - (new Date()).getTime()) / 1000))
+      await createBoosts(
+        dbUser._id,
+        planCodesToParams[planCode].boostsPerCycle,
+        Math.round((nextBillingDate.getTime() - new Date().getTime()) / 1000)
+      );
     } catch (error) {
-      console.error("ERROR CREATING BOOSTS FOR USER: ", dbUser._id, ". Supposed to add ", planCodesToParams[planCode].boostsPerCycle, " boosts that would expire by ", nextBillingDate, "(", eventSubscription.next_billing_at, "). Error reported: ", error);
+      logger.error(
+        'ERROR CREATING BOOSTS FOR USER: ',
+        dbUser._id,
+        '. Supposed to add ',
+        planCodesToParams[planCode].boostsPerCycle,
+        ' boosts that would expire by ',
+        nextBillingDate,
+        '(',
+        eventSubscription.next_billing_at,
+        '). Error reported: ',
+        error
+      );
     }
   }
 
   if (subStatus === 'live' || subStatus === 'trial') {
-    dbUser.subscription[0].level = planCodesToSubscriptionLvl[planCode]
+    dbUser.subscription[0].level = planCodesToSubscriptionLvl[planCode];
   } else {
-    dbUser.subscription[0].level = 1
+    dbUser.subscription[0].level = 1;
   }
-  await dbUser.save()
+  await dbUser.save();
 }
 
 async function redirectToHostedPageForSubscription(cookies, planCode, ccy) {
+  logger.debug(`in redirectToHostedPageForSubscription`);
   const tknStr = cookies[config.jwt.cookieName];
   if (!tknStr) {
     return {
-      redirect: `/auth/keycloak?redirect=/subscriptions/hostedpages/redirect?planCode=${encodeURIComponent(planCode)}&ccy=${encodeURIComponent(ccy)}`
-    }
+      redirect: `/auth/keycloak?redirect=/subscriptions/hostedpages/redirect?planCode=${encodeURIComponent(
+        planCode
+      )}&ccy=${encodeURIComponent(ccy)}`
+    };
   }
 
   let token;
@@ -106,27 +118,38 @@ async function redirectToHostedPageForSubscription(cookies, planCode, ccy) {
     token = decodeToken(tknStr);
   } catch (error) {
     return {
-      redirect: `/auth/keycloak?redirect=/subscriptions/hostedpages/redirect?planCode=${encodeURIComponent(planCode)}&ccy=${encodeURIComponent(ccy)}`
-    }
+      redirect: `/auth/keycloak?redirect=/subscriptions/hostedpages/redirect?planCode=${encodeURIComponent(
+        planCode
+      )}&ccy=${encodeURIComponent(ccy)}`
+    };
   }
 
-  if (!token || !token.user_id || !token.email || token.is_demo || !token.is_verified) {
+  if (
+    !token ||
+    !token.user_id ||
+    !token.email ||
+    token.is_demo ||
+    !token.is_verified
+  ) {
     return {
-      redirect: `/auth/keycloak?redirect=/subscriptions/hostedpages/redirect?planCode=${encodeURIComponent(planCode)}&ccy=${encodeURIComponent(ccy)}`
-    }
+      redirect: `/auth/keycloak?redirect=/subscriptions/hostedpages/redirect?planCode=${encodeURIComponent(
+        planCode
+      )}&ccy=${encodeURIComponent(ccy)}`
+    };
   }
 
   try {
     let respObj = await createHostedPageForSubscription(cookies, planCode, ccy);
     return {
       redirect: respObj.pageUrl
-    }
+    };
   } catch (err) {
-    return Promise.reject(err)
+    return Promise.reject(err);
   }
 }
 
 async function createHostedPageForSubscription(cookies, planCode, ccy) {
+  logger.debug(`in createHostedPageForSubscription`);
   const tknStr = cookies[config.jwt.cookieName];
   if (!tknStr) {
     return Promise.reject(ForbiddenError());
@@ -151,13 +174,25 @@ async function createHostedPageForSubscription(cookies, planCode, ccy) {
     return Promise.reject(ForbiddenError());
   }
 
-  if (!token || !token.user_id || !token.email || token.is_demo || !token.is_verified) {
+  if (
+    !token ||
+    !token.user_id ||
+    !token.email ||
+    token.is_demo ||
+    !token.is_verified
+  ) {
     return Promise.reject(ForbiddenError());
   }
 
   try {
     let dbUser = await User.findOne({
       _id: token.user_id
+    }).select({
+      _id: 1,
+      zoho_customer_id: 1,
+      full_name: 1,
+      primary_locale: 1,
+      zoho_ccy_code: 1
     });
 
     if (!dbUser) {
@@ -165,23 +200,38 @@ async function createHostedPageForSubscription(cookies, planCode, ccy) {
     }
 
     if (!dbUser.zoho_customer_id) {
-      let fullName = getStringByLocale(dbUser.full_name, dbUser.primary_locale).text;
-      dbUser.zoho_customer_id = await createNewCustomer(fullName.split(' ').slice(0, -1).join(' '), fullName.split(' ').slice(-1).join(' '), dbUser.primary_email, ccy);
+      let fullName = getStringByLocale(dbUser.full_name, dbUser.primary_locale)
+        .text;
+      dbUser.zoho_customer_id = await createNewCustomer(
+        fullName
+          .split(' ')
+          .slice(0, -1)
+          .join(' '),
+        fullName
+          .split(' ')
+          .slice(-1)
+          .join(' '),
+        dbUser.primary_email,
+        ccy
+      );
       dbUser.zoho_ccy_code = ccy;
       await dbUser.save();
-    } else if (dbUser.zoho_ccy_code != ccy) {
+    } else if (dbUser.zoho_ccy_code !== ccy) {
       await updateCustomerCurrencyCode(dbUser.zoho_customer_id, ccy);
       dbUser.zoho_ccy_code = ccy;
       await dbUser.save();
     }
 
-    const pageUrl = await createNewSubscriptionPage(dbUser.zoho_customer_id, planCode);
+    const pageUrl = await createNewSubscriptionPage(
+      dbUser.zoho_customer_id,
+      planCode
+    );
     return {
       pageUrl
-    }
+    };
   } catch (err) {
-    console.log(err)
-    return Promise.reject(BadRequestError())
+    logger.error(err);
+    return Promise.reject(BadRequestError());
   }
 }
 
