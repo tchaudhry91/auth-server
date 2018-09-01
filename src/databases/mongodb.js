@@ -9,10 +9,13 @@ const reconnectTimeout = config.mongo.reconnectTimeout;
 
 function connect() {
   mongoose
-    .connect(config.mongo.uri + '/' + config.mongo.db, {
-      autoReconnect: true,
-      useNewUrlParser: true
-    })
+    .connect(
+      config.mongo.uri + '/' + config.mongo.db,
+      {
+        autoReconnect: true,
+        useNewUrlParser: true
+      }
+    )
     .catch(() => {});
 
   // mongoose.set('useCreateIndex', true);
