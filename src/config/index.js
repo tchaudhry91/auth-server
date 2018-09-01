@@ -23,18 +23,12 @@ module.exports = {
     passReqToCallback: true
   }),
 
-  log: {
-    prefix: process.env.LOG_PREFIX || 'api:'
-  },
-
   cookies: {
     domain: process.env.COOKIES_DOMAIN || 'localhost'
   },
 
   service: {
-    port: process.env.SERVICE_PORT || process.env.PORT || 3030,
-    domain: process.env.SERVICE_DOMAIN || 'localhost',
-    url: process.env.SERVICE_URL || 'http://localhost:3030'
+    port: process.env.SERVICE_PORT || process.env.PORT || 3030
   },
 
   client: {
