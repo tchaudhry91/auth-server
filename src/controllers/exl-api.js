@@ -48,6 +48,38 @@ async function getUserSubscriptionLevel(apiKey, userID) {
   }
 }
 
+async function purchaseCreditsForUser(apiKey, userID, purchaseN) {
+  if (!apiKey || apiKey !== config.exlInternalAPI.key) {
+    return Promise.reject(ForbiddenError());
+  }
+  if (!userID || !purchaseN || purchaseN < 1) {
+    return Promise.reject(BadRequestError());
+  }
+  try {
+    let dbUser = await User.findOne({
+      _id: userID
+    }).exec();
+
+    if (!dbUser) {
+      return Promise.reject(NotFoundError());
+    }
+
+    const custId = user.stripe ? user.stripe.customer_id : null;
+    const creditsSubId = user.stripe ? user.stripe.credits_sub_id : null;
+    const creditsSubItemId = user.stripe? user.stripe.credits_sub_item_id : null;
+    if (!custId || !creditsSubId || !creditsSubItemId) {
+        return Promise.reject(ForbiddenError());
+    }
+    await config.stripe.usageRecords.create(creditsSubItemId, {
+        quantity: purchaseN,
+        timestamp: Math.round(new Date().getTime() / 1000)
+    });
+  } catch (error) {
+    logger.error(error);
+    return Promise.reject(InternalServerError());
+  }
+}
+
 async function addChargeToUser(apiKey, userID, reqObj) {
   const { chargeAmtUSD, chargeDescription } = reqObj;
   if (!apiKey || apiKey !== config.exlInternalAPI.key) {
@@ -110,5 +142,6 @@ async function addChargeToUser(apiKey, userID, reqObj) {
 
 module.exports = {
   getUserSubscriptionLevel,
-  addChargeToUser
+  addChargeToUser,
+  purchaseCreditsForUser
 };

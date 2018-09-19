@@ -5,6 +5,7 @@ import UserCourseRoleSchema from './user-course-role-model';
 import UserSubscriptionSchema from './user-subscription-model';
 import AuthStrategySchema from './auth-strategy-model';
 import UserOrganizationRoleSchema from './user-organization-role-model';
+import UserStripeSchema from './user-stripe-model';
 import IntlStringSchema from './intl-string-model';
 
 /**
@@ -86,6 +87,9 @@ const UserSchema = new mongoose.Schema(
     },
     zoho_ccy_code: {
       type: String
+    },
+    stripe: {
+      type: UserStripeSchema
     }
   },
   {
