@@ -119,8 +119,9 @@ router.get(
 
 router.get('/me/credits', c(credits.getCredits, req => [req.cookies]));
 router.post('/me/credits/purchase', c(credits.purchaseCredits, req => [req.cookies, req.query.purchaseN]));
-router.post('/me/credits/enroll', c(credits.enroll, req => [req.cookies, req.query.stripeToken]));
+router.post('/me/credits/enroll', c(credits.enroll, req => [req.cookies, req.body.stripeToken]));
 router.post('/me/credits/unenroll', c(credits.unenroll, req => [req.cookies]));
+router.get('/me/credits/membership', c(credits.membershipStatus, req => [req.cookies]));
 
 router.post('/me/logout', c(auth.logout, req => [req.cookies]));
 

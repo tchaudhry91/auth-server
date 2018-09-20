@@ -19,6 +19,7 @@ export async function getBoosts(userId) {
     if (!data || !data.success) {
       return Promise.reject('failed to get boosts for user');
     }
+    console.log(data.data)
     return data.data ? data.data.count : 0;
   } catch (err) {
     return Promise.reject(err);

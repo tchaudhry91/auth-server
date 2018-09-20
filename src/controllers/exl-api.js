@@ -74,6 +74,9 @@ async function purchaseCreditsForUser(apiKey, userID, purchaseN) {
         quantity: purchaseN,
         timestamp: Math.round(new Date().getTime() / 1000)
     });
+    return {
+      success: true
+    }
   } catch (error) {
     logger.error(error);
     return Promise.reject(InternalServerError());

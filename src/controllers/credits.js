@@ -36,6 +36,10 @@ async function purchaseCredits(cookies, nToPurchase) {
     } catch (error) {
         return Promise.reject(ForbiddenError());
     }
+    nToPurchase = parseInt(nToPurchase);
+    if (isNaN(nToPurchase)) {
+        return Promise.reject(BadRequestError());
+    }
     const custId = user.stripe ? user.stripe.customer_id : null;
     const creditsSubId = user.stripe ? user.stripe.credits_sub_id : null;
     const creditsSubItemId = user.stripe? user.stripe.credits_sub_item_id : null;
@@ -45,20 +49,20 @@ async function purchaseCredits(cookies, nToPurchase) {
     
     try {
         await createBoosts(
-            dbUser._id,
+            user._id,
             nToPurchase,
-            Math.round((new Date().getTime() / 1000) + 31556926 * 999)
+            31556926 * 99
         );
         await config.stripe.usageRecords.create(creditsSubItemId, {
             quantity: nToPurchase,
             timestamp: Math.round(new Date().getTime() / 1000)
         });
-        const boostsResult = await getBoosts(decoded.user_id);
+        const boostsResult = await getBoosts(user._id);
         return {
             creditsCount: boostsResult
         };
     } catch (err) {
-        logger.error("Error purchasing credits: ", err)
+        logger.error("Error purchasing credits: " + err)
         return Promise.reject(InternalServerError());
     }
 }
@@ -71,19 +75,27 @@ async function enroll(cookies, stripeToken) {
     } catch (error) {
         return Promise.reject(ForbiddenError());
     }
+    if (!stripeToken || !stripeToken.token || !stripeToken.token.id) {
+        return Promise.reject(BadRequestError());
+    }
     // Check that they have an email (users with emails are automatically not demo users)
     if (!user.primary_email) {
         return Promise.reject(new ServerError(msg ? msg : 'Bad request, user requires a primary_email to enroll in a subscription', 400));
     }
     let custId = user.stripe ? user.stripe.customer_id : null;
     let creditsSubItemId = user.stripe ? user.stripe.credits_sub_item_id : null;
+    logger.debug('custId ' + custId);
+    logger.debug('creditsSubItemId ' + creditsSubItemId);
     if (!custId) {
+        logger.debug('about to create a customer')
         try {
+            const descUserField = getStringByLocale(user.full_name, 'en').text ? getStringByLocale(user.full_name, 'en').text : 'No Name Supplied';
             const stripeCustomer = await config.stripe.customers.create({
-                description: '[EXLskills - ' + user._id + '] ' + user.full_name ? user.full_name : 'No Name Supplied',
+                description: '[EXLskills - ' + user._id + '] ' + descUserField,
                 email: user.primary_email,
-                source: stripeToken
+                source: stripeToken.token.id
             });
+            logger.debug('returned from creating a customer')
             custId = stripeCustomer.id;
             // We set it to a wholly new object since if they didn't have a cust ID it's safe to assume that there is no other data
             user.stripe = {
@@ -91,7 +103,7 @@ async function enroll(cookies, stripeToken) {
             }
             await user.save();
         } catch (err) {
-            logger.error("Error creating/saving stripe customer: ", err);
+            logger.error("Error creating/saving stripe customer: " + err);
             return Promise.reject(InternalServerError());
         }   
     }
@@ -114,7 +126,7 @@ async function enroll(cookies, stripeToken) {
             }
             await user.save();
         } catch (err) {
-            logger.error("Error creating/saving stripe subscription: ", err);
+            logger.error("Error creating/saving stripe subscription: " + err);
             return Promise.reject(InternalServerError());
         }
     }
@@ -147,9 +159,28 @@ async function unenroll(cookies) {
     return {success: true}
 }
 
+async function membershipStatus(cookies) {
+    logger.debug(`in membershipStatus (for credits)`);
+    let user;
+    try {
+        user = await User.findById(decodeToken(cookies[config.jwt.cookieName]).user_id).exec();
+    } catch (error) {
+        return Promise.reject(ForbiddenError());
+    }
+    const custId = user.stripe ? user.stripe.customer_id : null;
+    const creditsSubId = user.stripe ? user.stripe.credits_sub_id : null;
+    const creditsSubItemId = user.stripe ? user.stripe.credits_sub_item_id : null;
+    if (custId && creditsSubId && creditsSubItemId) {
+        return {enrolled: true}
+    } else {
+        return {enrolled: false}
+    }
+}
+
 module.exports = {
     getCredits,
     purchaseCredits,
     enroll,
-    unenroll
+    unenroll,
+    membershipStatus
 };
