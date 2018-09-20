@@ -5,7 +5,7 @@ import path from 'path';
 // Load whatever's in the .env file
 dotenv.config();
 
-module.exports = {
+export default {
   environment: process.env.NODE_ENV,
   memcachedUrl: process.env.MEMCACHED_URL,
   sessionSecret: process.env.SESSION_SECRET || 'set_me',
@@ -81,7 +81,7 @@ module.exports = {
     url: process.env.BOT_MANAGER_API_URL || 'http://localhost:2999'
   },
 
-  stripe: require("stripe")(process.env.STRIPE_SECRET_KEY || "set_me"),
+  stripe: require('stripe')(process.env.STRIPE_SECRET_KEY || 'set_me'),
 
   stripePlans: {
     creditsMetered: {

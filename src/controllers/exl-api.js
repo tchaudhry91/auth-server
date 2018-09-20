@@ -66,17 +66,19 @@ async function purchaseCreditsForUser(apiKey, userID, purchaseN) {
 
     const custId = user.stripe ? user.stripe.customer_id : null;
     const creditsSubId = user.stripe ? user.stripe.credits_sub_id : null;
-    const creditsSubItemId = user.stripe? user.stripe.credits_sub_item_id : null;
+    const creditsSubItemId = user.stripe
+      ? user.stripe.credits_sub_item_id
+      : null;
     if (!custId || !creditsSubId || !creditsSubItemId) {
-        return Promise.reject(ForbiddenError());
+      return Promise.reject(ForbiddenError());
     }
     await config.stripe.usageRecords.create(creditsSubItemId, {
-        quantity: purchaseN,
-        timestamp: Math.round(new Date().getTime() / 1000)
+      quantity: purchaseN,
+      timestamp: Math.round(new Date().getTime() / 1000)
     });
     return {
       success: true
-    }
+    };
   } catch (error) {
     logger.error(error);
     return Promise.reject(InternalServerError());

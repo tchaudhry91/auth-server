@@ -7,7 +7,14 @@ import { logger } from '../utils/logger';
 const controllers = require('../controllers');
 
 const router = express.Router();
-const { auth, subscriptions, healthCheck, exlAPI, credits } = controllers;
+const {
+  auth,
+  subscriptions,
+  healthCheck,
+  exlAPI,
+  credits,
+  purchase
+} = controllers;
 
 /**
  * Handles controller execution and responds to user (API version).
@@ -118,10 +125,19 @@ router.get(
 );
 
 router.get('/me/credits', c(credits.getCredits, req => [req.cookies]));
-router.post('/me/credits/purchase', c(credits.purchaseCredits, req => [req.cookies, req.query.purchaseN]));
-router.post('/me/credits/enroll', c(credits.enroll, req => [req.cookies, req.body.stripeToken]));
+router.post(
+  '/me/credits/purchase',
+  c(credits.purchaseCredits, req => [req.cookies, req.query.purchaseN])
+);
+router.post(
+  '/me/credits/enroll',
+  c(credits.enroll, req => [req.cookies, req.body.stripeToken])
+);
 router.post('/me/credits/unenroll', c(credits.unenroll, req => [req.cookies]));
-router.get('/me/credits/membership', c(credits.membershipStatus, req => [req.cookies]));
+router.get(
+  '/me/credits/membership',
+  c(credits.membershipStatus, req => [req.cookies])
+);
 
 router.post('/me/logout', c(auth.logout, req => [req.cookies]));
 
@@ -129,6 +145,11 @@ router.post('/me/logout', c(auth.logout, req => [req.cookies]));
 router.post(
   '/zoho/subscriptions/events',
   c(subscriptions.zohoPostEvent, req => [req.query.apiKey, req.body])
+);
+
+router.post(
+  '/purchase',
+  c(purchase.buyCourseSeat, req => [req.cookies, req.body.purchaseObj])
 );
 
 /**
