@@ -72,11 +72,10 @@ async function zohoPostEvent(apiKey, body) {
   if (eventType === 'subscription_renewed') {
     // When subscriptions renew, we add monthly benefits that expire by the next billing cycle
     try {
-      // NOTE: Divide the date difference by 1000 because JS uses milliseconds while the API takes seconds
       await createBoosts(
         dbUser._id,
         planCodesToParams[planCode].boostsPerCycle,
-        Math.round((nextBillingDate.getTime() - new Date().getTime()) / 1000)
+        31556926 * 99
       );
     } catch (error) {
       logger.error(

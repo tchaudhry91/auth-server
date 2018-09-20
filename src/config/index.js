@@ -81,6 +81,16 @@ module.exports = {
     url: process.env.BOT_MANAGER_API_URL || 'http://localhost:2999'
   },
 
+  stripe: require("stripe")(process.env.STRIPE_SECRET_KEY || "set_me"),
+
+  stripePlans: {
+    creditsMetered: {
+      id: process.env.STRIPE_PLANS_CREDITS_METERED_ID || 'set_me',
+      level: process.env.STRIPE_PLANS_CREDITS_METERED_LEVEL || 2000
+    }
+  },
+
+  // TODO deprecated - remove
   zoho: {
     apiBaseUrl: 'https://billing.exlinc.com/api/v1/',
     orgId: process.env.ZOHO_ORG_ID || 'set_me',

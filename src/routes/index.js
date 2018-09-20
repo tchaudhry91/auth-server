@@ -7,7 +7,7 @@ import { logger } from '../utils/logger';
 const controllers = require('../controllers');
 
 const router = express.Router();
-const { auth, subscriptions, healthCheck, exlAPI } = controllers;
+const { auth, subscriptions, healthCheck, exlAPI, credits } = controllers;
 
 /**
  * Handles controller execution and responds to user (API version).
@@ -54,6 +54,8 @@ router.post(
   '/intercom-user-hash',
   c(auth.intercomUserHash, req => [req.cookies])
 );
+
+// TODO - Deprecated, remove
 router.get(
   '/subscriptions/hostedpages',
   c(subscriptions.createHostedPageForSubscription, req => [
@@ -62,6 +64,8 @@ router.get(
     req.query.ccy
   ])
 );
+
+// TODO - Deprecated, remove
 router.get(
   '/subscriptions/hostedpages/redirect',
   c(subscriptions.redirectToHostedPageForSubscription, req => [
@@ -70,7 +74,9 @@ router.get(
     req.query.ccy
   ])
 );
+
 router.get('/health-check', c(healthCheck.healthCheckIndex, req => []));
+
 router.get(
   '/exl/users/:userId/subscription',
   c(exlAPI.getUserSubscriptionLevel, req => [
@@ -78,6 +84,8 @@ router.get(
     req.params.userId
   ])
 );
+
+// TODO - Deprecated, remove
 router.post(
   '/exl/users/:userId/charges',
   c(exlAPI.addChargeToUser, req => [
@@ -86,6 +94,16 @@ router.post(
     req.body
   ])
 );
+
+router.post(
+  '/exl/users/:userId/credits',
+  c(exlAPI.purchaseCreditsForUser, req => [
+    req.query.apiKey,
+    req.params.userId,
+    req.query.purchaseN
+  ])
+);
+
 router.get('/auth/keycloak', (req, res) => {
   if (req.query.redirect) {
     res.cookie('kc_lgn_success_redir', req.query.redirect, {});
@@ -99,8 +117,15 @@ router.get(
   c(auth.finalizeKeycloakAuth, req => [req.user, req.cookies])
 );
 
+router.get('/me/credits', c(credits.getCredits, req => [req.cookies]));
+router.post('/me/credits/purchase', c(credits.purchaseCredits, req => [req.cookies, req.query.purchaseN]));
+router.post('/me/credits/enroll', c(credits.enroll, req => [req.cookies, req.body.stripeToken]));
+router.post('/me/credits/unenroll', c(credits.unenroll, req => [req.cookies]));
+router.get('/me/credits/membership', c(credits.membershipStatus, req => [req.cookies]));
+
 router.post('/me/logout', c(auth.logout, req => [req.cookies]));
 
+// TODO - Deprecated, remove
 router.post(
   '/zoho/subscriptions/events',
   c(subscriptions.zohoPostEvent, req => [req.query.apiKey, req.body])
