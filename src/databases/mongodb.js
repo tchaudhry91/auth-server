@@ -1,6 +1,6 @@
 import { logger } from '../utils/logger';
 
-const config = require('../config');
+import config from '../config';
 const mongoose = require('mongoose');
 
 mongoose.Promise = Promise;
