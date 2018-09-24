@@ -173,4 +173,4 @@ router.use((err, req, res, _next) => {
   });
 });
 
-module.exports = router;
+export default router;

@@ -8,6 +8,7 @@ mongoose.Promise = Promise;
 const reconnectTimeout = config.mongo.reconnectTimeout;
 
 function connect() {
+  logger.info(config.mongo.uri + '/' + config.mongo.db);
   mongoose
     .connect(
       config.mongo.uri + '/' + config.mongo.db,
