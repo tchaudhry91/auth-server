@@ -103,15 +103,20 @@ async function buyCourseCertificate(payer_user_id, user_id, item) {
   ) {
     throw new Error('Purchase Info Details Missing');
   }
-  const course = await basicFind(
-    Course,
-    {
-      isById: true
-    },
-    courseId,
-    null,
-    { verified_cert_cost: 1 }
-  );
+  let course = null;
+  try {
+    course = await basicFind(
+      Course,
+      {
+        isById: true
+      },
+      courseId,
+      null,
+      { verified_cert_cost: 1 }
+    );
+  } catch (error) {
+    // Internally reported. Will exit on course = null
+  }
 
   if (!course || !course.verified_cert_cost) {
     throw new Error('Invalid course or no support for verified certificates');
