@@ -67,7 +67,7 @@ export default {
 
   smtp: nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.sendgrid.net',
-    port: process.env.SMTP_PORT || 25,
+    port: process.env.SMTP_PORT || 587,
     requiresAuth: true,
     auth: {
       user: process.env.SMTP_USERNAME || 'apikey',
@@ -104,49 +104,6 @@ export default {
     creditsMetered: {
       id: process.env.STRIPE_PLANS_CREDITS_METERED_ID || 'set_me',
       level: process.env.STRIPE_PLANS_CREDITS_METERED_LEVEL || 2000
-    }
-  },
-
-  // TODO deprecated - remove
-  zoho: {
-    apiBaseUrl: 'https://billing.exlinc.com/api/v1/',
-    orgId: process.env.ZOHO_ORG_ID || 'set_me',
-    authToken: process.env.ZOHO_AUTH_TOKEN || 'set_me',
-    eventsApiKey: process.env.ZOHO_EVENTS_API_KEY || 'set_me',
-    plans: {
-      essentials: {
-        level: 3000,
-        monthly: {
-          planCode: 'EXLskills-008',
-          boostsPerCycle: 2
-        },
-        annual: {
-          planCode: 'EXLskills-009',
-          boostsPerCycle: 24
-        }
-      },
-      professional: {
-        level: 5000,
-        monthly: {
-          planCode: 'EXLskills-010',
-          boostsPerCycle: 2
-        },
-        annual: {
-          planCode: 'EXLskills-011',
-          boostsPerCycle: 24
-        }
-      },
-      business: {
-        level: 7000,
-        monthly: {
-          planCode: 'EXLskills-012',
-          boostsPerCycle: 2
-        },
-        annual: {
-          planCode: 'EXLskills-015',
-          boostsPerCycle: 24
-        }
-      }
     }
   },
 

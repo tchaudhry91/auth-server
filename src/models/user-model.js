@@ -81,13 +81,6 @@ const UserSchema = new mongoose.Schema(
       type: [UserCourseRoleSchema],
       default: []
     },
-    zoho_customer_id: {
-      type: String,
-      index: true
-    },
-    zoho_ccy_code: {
-      type: String
-    },
     stripe: {
       type: UserStripeSchema
     }

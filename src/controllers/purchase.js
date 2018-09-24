@@ -15,6 +15,7 @@ import {
   ITEM_CATEGORY_COURSE_CERTIFICATE,
   ITEM_CATEGORY_COURSE_RUN
 } from '../models/order-item-model';
+import { getStringByLocale } from '../helpers/intl-string';
 
 /*
 payer_user_id?  - deduct from this User. Default: decoded user_id is used
@@ -29,6 +30,7 @@ item            - Fields related to the purchase item
     cd_run_id?: courseDeliverySchedule.scheduled_runs._id
     price_rec_id?: _id - link to a specific price "override" for the purchase after discounts, promos, etc. Optional-future. Offered_at_price is used
  */
+
 
 async function purchaseHandler(cookies, payer_user_id, user_id, item) {
   logger.debug(`in purchaseHandler`);
@@ -58,19 +60,19 @@ async function purchaseHandler(cookies, payer_user_id, user_id, item) {
     );
   }
 
-  // TODO in the future, potentially allow overrides here
-  payer_user_id = user._id;
-  user_id = user._id;
-
   if (!item.options) {
     item.options = {};
   }
+
+  // TODO consider handling user and payer separately if we end up needing to do that...
+  payer_user_id = user._id;
+  user_id = user._id;
 
   // logger.debug(`item.category ` + item.category);
   switch (item.category) {
     case ITEM_CATEGORY_COURSE_RUN:
       try {
-        response = await buyCourseRun(payer_user_id, user_id, item);
+        response = await buyCourseRun(user, user, item);
       } catch (error) {
         logger.error(`error in buyCourseRun ` + error);
         return Promise.reject(BadRequestError(error.message));
@@ -79,7 +81,7 @@ async function purchaseHandler(cookies, payer_user_id, user_id, item) {
 
     case ITEM_CATEGORY_COURSE_CERTIFICATE:
       try {
-        response = await buyCourseCertificate(payer_user_id, user_id, item);
+        response = await buyCourseCertificate(user, user, item);
       } catch (error) {
         logger.error(`error in buyCourseCertificate ` + error);
         return Promise.reject(BadRequestError(error.message));
@@ -91,7 +93,7 @@ async function purchaseHandler(cookies, payer_user_id, user_id, item) {
   return response;
 }
 
-async function buyCourseCertificate(payer_user_id, user_id, item) {
+async function buyCourseCertificate(payer, user, item) {
   let response = {};
   logger.debug(`in buyCourseCertificate`);
 
@@ -112,7 +114,7 @@ async function buyCourseCertificate(payer_user_id, user_id, item) {
       },
       courseId,
       null,
-      { verified_cert_cost: 1 }
+      { title: 1, headline: 1, verified_cert_cost: 1 }
     );
   } catch (error) {
     // Internally reported. Will exit on course = null
@@ -136,7 +138,7 @@ async function buyCourseCertificate(payer_user_id, user_id, item) {
     }
   ];
   try {
-    await spendBoosts(payer_user_id, amount, true);
+    await spendBoosts(payer._id, amount, true);
   } catch (error) {
     throw new Error(
       'Failed to checkout. Please check that you have a valid credit card on file or sufficient credits available.'
@@ -144,8 +146,8 @@ async function buyCourseCertificate(payer_user_id, user_id, item) {
   }
   try {
     const orderId = await insertOrderRecord(
-      user_id,
-      payer_user_id,
+      user._id,
+      payer._id,
       itemObjArray
     );
     response.order_id = orderId;
@@ -154,41 +156,48 @@ async function buyCourseCertificate(payer_user_id, user_id, item) {
       'Failed recording completed purchase. Please contact Support'
     );
   }
-  // TODO send emails to user and system
+
+  let notif_emails = [payer.primary_email]
+  if (payer.primary_email != user.primary_email) {
+    notif_emails.push(user.primary_email);
+  }
+  
   try {
-    await config.smtp.sendMail({
-      from: config.notifications.email.from,
-      to: user.primary_email,
-      subject: `${config.platform.name} Order Confirmation`,
-      html: `<html>
-        <head>
-        </head>
-        <body>
-          <h3>Thank you for recent purchase of a ${certType =>
-    certType === 'verified' ? 'Verified ' : ''}Certificate with ${
-  config.platform.name
-}!</h3>
-          <p>A representative will be in touch within 24 hours to help you:</p>
-          <ol>
-            <li>Verify your identity (you'll only need to do this once a year for your account)</li>
-            <li>Schedule your online exam (you'll have up to two chances to take this exam on a single certificate purchase)</li>
-            <li>After you pass your online exam, schedule your remote technical live exam with an ${
-  config.platform.name
-} instructor</li>
-          </ol>
-          <p>After you complete this process, you will then recieve your certificate electronically along with a link for your potential employers to validate it - with your permission.</p>
-          <h6>Order Total: ${amount} ${
-  config.platform.name
-} Credits (Approx. US$${amount})</h6>
-          <p>NOTE: If you had a previous credit balance with ${
-  config.platform.name
-}, your credits will be deducted to cover this purchase. In the event that your account didn't have sufficient credits, the remaining required credits were added to your usage for this month and will be billed at the end of your current billing period.</p>
-          <p>Please see our help center and/or message support <a href="${
-  config.platform.helpCenterUrl
-}">here</a> if you have any questions/concerns.</p>
-        </body>
-      </html>`
-    });
+    for(let ind = 0; ind < notif_emails.length; ind++) {
+      await config.smtp.sendMail({
+        from: config.notifications.email.from,
+        to: notif_emails[ind],
+        subject: `${config.platform.name} Order Confirmation`,
+        html: `<html>
+          <head>
+          </head>
+          <body>
+            <h3>Thank you for recent purchase of a ${certType === 'verified' ? 'Verified ' : ''}Certificate with ${
+    config.platform.name
+  } for the ${getStringByLocale(course.title).text} Course!</h3>
+            <p>Your ${config.platform.name} Success Manager will be in touch within 24 hours to help you:</p>
+            <ol>
+              <li>Verify your identity (you'll only need to do this once a year for your account)</li>
+              <li>Schedule your online exam (you'll have up to two chances to take this exam on a single certificate purchase)</li>
+              <li>After you pass your online exam, schedule your remote technical live exam with an ${
+    config.platform.name
+  } instructor</li>
+            </ol>
+            <p>After you complete this process, you will then recieve your certificate electronically along with a link for your potential employers to validate it - with your permission.</p>
+            <strong>Order Total: ${amount} ${
+    config.platform.name
+  } Credits (Approx. US$${amount})</strong>
+            <p>NOTE: If you had a previous credit balance with ${
+    config.platform.name
+  }, your credits will be deducted to cover this purchase. In the event that your account didn't have sufficient credits, the remaining required credits were added to your usage for this month and will be billed at the end of your current billing period.</p>
+            <p>Please see our help center and/or message support <a href="${
+    config.platform.helpCenterUrl
+  }">here</a> if you have any questions/concerns.</p>
+            <p>For reference, your order ID is: ${response.order_id}</p>
+          </body>
+        </html>`
+      });
+    }
   } catch (error) {
     throw new Error('Failed sending email to user. Please contact Support');
   }
@@ -201,17 +210,16 @@ async function buyCourseCertificate(payer_user_id, user_id, item) {
       <head>
       </head>
       <body>
-        <h3>Thank you for recent purchase of a ${certType =>
-    certType === 'verified' ? 'Verified ' : ''}Certificate with ${
+        <h3>Thank you for recent purchase of a ${certType === 'verified' ? 'Verified ' : ''}Certificate with ${
   config.platform.name
-}!</h3>
+} for the ${getStringByLocale(course.title).text} Course!</h3>
         <p>Order Items: </p>
         <code>
           ${JSON.stringify(itemObjArray)}
         </code>
         <p>Paid for By: </p>
         <code>
-          ${JSON.stringify(user)}
+          ${JSON.stringify(payer)}
         </code>
         <p>Bought for: </p>
         <code>
@@ -221,6 +229,7 @@ async function buyCourseCertificate(payer_user_id, user_id, item) {
         <code>
           Credits: ${amount}
         </code>
+        <p>For reference, your order ID is: ${response.order_id}</p>
       </body>
     </html>`
     });
@@ -230,9 +239,10 @@ async function buyCourseCertificate(payer_user_id, user_id, item) {
   return response;
 }
 
-async function buyCourseRun(payer_user_id, user_id, item) {
+async function buyCourseRun(payer, user, item) {
   let response = {};
   logger.debug(`in buyCourseRun`);
+
 
   const cd_sched_id = item.refs.cd_sched_id;
   const cd_run_id = item.refs.cd_run_id;
@@ -242,83 +252,180 @@ async function buyCourseRun(payer_user_id, user_id, item) {
   }
 
   const alreadyBought = await fetchByUserAndItemRefId(
-    user_id,
+    user._id,
     ITEM_CATEGORY_COURSE_RUN,
     cd_run_id
   );
+  
+  // If the user has already purchased a seat, then return
   if (alreadyBought) {
     response.msg =
       'The User has already purchased a seat for these sessions. No action is necessary ';
-  } else {
-    const courseRunData = await fetchDeliveryStructurePricingById(cd_sched_id);
-    logger.debug(` runPricing ` + JSON.stringify(courseRunData));
-    // TODO: update the query above and the parse below to Aggreagate Pipeline
-    // Currently, the query returns the entire delivery_structures array for the Course Delivery record containing the one with the ID
+    return response
+  }
 
-    if (!courseRunData) {
-      throw new Error('Invalid Course Schedule Id');
-    }
-    const deliveryStruct = courseRunData.delivery_structures.filter(
-      obj => obj._id === cd_sched_id
+  const courseRunData = await fetchDeliveryStructurePricingById(cd_sched_id);
+  logger.debug(` runPricing ` + JSON.stringify(courseRunData));
+
+  let course = null;
+  try {
+    course = await basicFind(
+      Course,
+      {
+        isById: true
+      },
+      courseRunData.course_id,
+      null,
+      { title: 1, headline: 1 }
     );
-    //logger.debug(` deliveryStruct ` + JSON.stringify(deliveryStruct));
-    if (!(deliveryStruct && deliveryStruct.length > 0)) {
-      throw new Error('Invalid Course Schedule Id');
-    }
+  } catch (error) {
+    // Internally reported. Will exit on course = null
+  }
 
-    let amount = deliveryStruct[0].list_price.amount;
+  if (!course) {
+    throw new Error('Invalid course or no support for verified certificates');
+  }
 
-    const scheduledRun = deliveryStruct[0].scheduled_runs.filter(
-      obj => obj._id === cd_run_id
+  // TODO: update the query above and the parse below to Aggreagate Pipeline
+  // Currently, the query returns the entire delivery_structures array for the Course Delivery record containing the one with the ID
+
+  if (!courseRunData) {
+    throw new Error('Invalid Course Schedule Id');
+  }
+  const deliveryStruct = courseRunData.delivery_structures.filter(
+    obj => obj._id === cd_sched_id
+  );
+  
+  if (!(deliveryStruct && deliveryStruct.length > 0)) {
+    throw new Error('Invalid Course Schedule Id');
+  }
+
+  let amount = deliveryStruct[0].list_price.amount;
+
+  const scheduledRun = deliveryStruct[0].scheduled_runs.filter(
+    obj => obj._id === cd_run_id
+  );
+  
+  if (!(scheduledRun && scheduledRun.length > 0)) {
+    throw new Error('Invalid Course Run Id');
+  }
+
+  if (scheduledRun[0].offered_at_price) {
+    amount = scheduledRun[0].offered_at_price.amount;
+  }
+
+  logger.debug(` amount ` + amount);
+
+  if (amount <= 0) {
+    throw new Error('Invalid course run price');
+  }
+
+  try {
+    await spendBoosts(
+      payer._id,
+      amount,
+      true
     );
-    //logger.debug(` scheduledRun ` + JSON.stringify(scheduledRun));
-    if (!(scheduledRun && scheduledRun.length > 0)) {
-      throw new Error('Invalid Course Run Id');
-    }
-
-    if (scheduledRun[0].offered_at_price) {
-      amount = scheduledRun[0].offered_at_price.amount;
-    }
-
-    logger.debug(` amount ` + amount);
-
-    if (amount > 0) {
-      // TODO - uncomment
-      /*
-      try {
-        const spend = await spendBoosts(
-          payer_user_id,
-          amount,
-          true
-        );
-      } catch (error) {
-        throw new Error('Failed at checkout ' + error.message);
+  } catch (error) {
+    throw new Error('Failed at checkout ' + error.message);
+  }
+  
+  const itemObjArray = [
+    {
+      item_category: ITEM_CATEGORY_COURSE_RUN,
+      amount: amount,
+      item_ref: {
+        cd_run_id: cd_run_id
       }
-*/
-      const itemObjArray = [
-        {
-          item_category: ITEM_CATEGORY_COURSE_RUN,
-          amount: amount,
-          item_ref: {
-            cd_run_id: cd_run_id
-          }
-        }
-      ];
-      try {
-        const orderId = await insertOrderRecord(
-          user_id,
-          payer_user_id,
-          itemObjArray
-        );
-        response.order_id = orderId;
-      } catch (error) {
-        throw new Error(
-          'Failed recording completed purchase. Please contact Support'
-        );
-      }
-    } else {
-      throw new Error('Price for the Course is missing');
     }
+  ];
+
+  try {
+    const orderId = await insertOrderRecord(
+      user._id,
+      payer._id,
+      itemObjArray
+    );
+    response.order_id = orderId;
+  } catch (error) {
+    throw new Error(
+      'Failed recording completed purchase. Please contact Support'
+    );
+  }
+
+  let notif_emails = [payer.primary_email]
+  if (payer.primary_email != user.primary_email) {
+    notif_emails.push(user.primary_email);
+  }
+
+  try {
+    for(let ind = 0; ind < notif_emails.length; ind++) {
+      await config.smtp.sendMail({
+        from: config.notifications.email.from,
+        to: notif_emails[ind],
+        subject: `${config.platform.name} Order Confirmation`,
+        html: `<html>
+          <head>
+          </head>
+          <body>
+            <h3>Thank you for recent purchase of a Live Course Series for ${getStringByLocale(course.title).text} with ${config.platform.name}!</h3>
+            <p>A ${config.platform.name} Success Manager will be in touch within 24 hours with:</p>
+            <ul>
+              <li>Links and credentials to the live course</li>
+              <li>Any extra required course materials/resources</li>
+              <li>An introduction to your instructor for the course</li>
+            </ul>
+            <p>In the event of any course schedule changes, your ${config.platform.name} Success Manager will also notify you as early as possible. If you're unable to attend a live session in the series that you signed up, you'll be able to download a recording online shortly after the session is completed.</p>
+            <strong>Order Total: ${amount} ${
+    config.platform.name
+  } Credits (Approx. US$${amount})</strong>
+            <p>NOTE: If you had a previous credit balance with ${
+    config.platform.name
+  }, your credits will be deducted to cover this purchase. In the event that your account didn't have sufficient credits, the remaining required credits were added to your usage for this month and will be billed at the end of your current billing period.</p>
+            <p>Please see our help center and/or message support <a href="${
+    config.platform.helpCenterUrl
+  }">here</a> if you have any questions/concerns.</p>
+            <p>For reference, your order ID is: ${response.order_id}</p>
+          </body>
+        </html>`
+      });
+    }
+  } catch (error) {
+    throw new Error('Failed sending email to user. Please contact Support');
+  }
+
+  try {
+    await config.smtp.sendMail({
+      from: config.notifications.email.from,
+      to: config.platform.supportEmail,
+      subject: `${config.platform.name} Certificate Order Notification`,
+      html: `<html>
+      <head>
+      </head>
+      <body>
+        <h3>Thank you for recent purchase of a Live Course Series for ${getStringByLocale(course.title).text} with ${config.platform.name}!</h3>
+        <p>Order Items: </p>
+        <code>
+          ${JSON.stringify(itemObjArray)}
+        </code>
+        <p>Paid for By: </p>
+        <code>
+          ${JSON.stringify(payer)}
+        </code>
+        <p>Bought for: </p>
+        <code>
+          ${JSON.stringify(user)}
+        </code>
+        <p>Order Total: </p>
+        <code>
+          Credits: ${amount}
+        </code>
+        <p>For reference, your order ID is: ${response.order_id}</p>
+      </body>
+    </html>`
+    });
+  } catch (error) {
+    throw new Error('Failed sending email to system. Please contact Support');
   }
   return response;
 }

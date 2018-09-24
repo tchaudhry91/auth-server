@@ -9,7 +9,6 @@ const controllers = require('../controllers');
 const router = express.Router();
 const {
   auth,
-  subscriptions,
   healthCheck,
   exlAPI,
   credits,
@@ -62,26 +61,6 @@ router.post(
   c(auth.intercomUserHash, req => [req.cookies])
 );
 
-// TODO - Deprecated, remove
-router.get(
-  '/subscriptions/hostedpages',
-  c(subscriptions.createHostedPageForSubscription, req => [
-    req.cookies,
-    req.query.planCode,
-    req.query.ccy
-  ])
-);
-
-// TODO - Deprecated, remove
-router.get(
-  '/subscriptions/hostedpages/redirect',
-  c(subscriptions.redirectToHostedPageForSubscription, req => [
-    req.cookies,
-    req.query.planCode,
-    req.query.ccy
-  ])
-);
-
 router.get('/health-check', c(healthCheck.healthCheckIndex, req => []));
 
 router.get(
@@ -89,16 +68,6 @@ router.get(
   c(exlAPI.getUserSubscriptionLevel, req => [
     req.query.apiKey,
     req.params.userId
-  ])
-);
-
-// TODO - Deprecated, remove
-router.post(
-  '/exl/users/:userId/charges',
-  c(exlAPI.addChargeToUser, req => [
-    req.query.apiKey,
-    req.params.userId,
-    req.body
   ])
 );
 
@@ -140,12 +109,6 @@ router.get(
 );
 
 router.post('/me/logout', c(auth.logout, req => [req.cookies]));
-
-// TODO - Deprecated, remove
-router.post(
-  '/zoho/subscriptions/events',
-  c(subscriptions.zohoPostEvent, req => [req.query.apiKey, req.body])
-);
 
 router.post(
   '/purchase',

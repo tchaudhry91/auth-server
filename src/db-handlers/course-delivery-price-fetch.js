@@ -14,7 +14,8 @@ export const fetchDeliveryStructurePricingById = async sched_run_id => {
       {
         'delivery_structures._id': 1,
         'delivery_structures.list_price': 1,
-        'delivery_structures.scheduled_runs': 1
+        'delivery_structures.scheduled_runs': 1,
+        'course_id': 1
       }
     );
   } catch (errInternalAlreadyReported) {
