@@ -12,9 +12,18 @@ export default new mongoose.Schema(
       type: String,
       required: true
     },
-    item_id: {
-      type: [EmbeddedDocRefRecord],
+    item_options: {
+      type: Object,
+      default: {}
+    },
+    item_ref: {
+      type: Object,
       required: true
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      default: 1
     },
     amount: {
       type: Number,

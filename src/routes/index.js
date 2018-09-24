@@ -149,7 +149,7 @@ router.post(
 
 router.post(
   '/purchase',
-  c(purchase.purchaseHandler, req => [req.cookies, req.body])
+  c(purchase.purchaseHandler, req => [req.cookies, req.body.payer_user_id, req.body.user_id, req.body.item])
 );
 
 /**

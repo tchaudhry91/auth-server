@@ -1,4 +1,5 @@
 import KeycloakEnvConfig from '@exlinc/keycloak-passport/configuration';
+import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -22,6 +23,13 @@ export default {
     callbackURL: process.env.KEYCLOAK_CALLBACK_URL || '/auth/keycloak/callback',
     passReqToCallback: true
   }),
+
+  platform: {
+    name: "EXLskills",
+    url: "https://exlskills.com",
+    supportEmail: 'support@exlskills.com',
+    helpCenterUrl: 'https://help.exlskills.com/'
+  },
 
   cookies: {
     domain: process.env.COOKIES_DOMAIN || 'localhost'
@@ -57,13 +65,22 @@ export default {
 
   userDataCookieName: process.env.USER_DATA_COOKIE_NAME || 'user_data',
 
-  smtp: {
+  smtp: nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.sendgrid.net',
     port: process.env.SMTP_PORT || 25,
-    secure: true,
+    requiresAuth: true,
     auth: {
       user: process.env.SMTP_USERNAME || 'apikey',
       pass: process.env.SMTP_PASSWORD || 'set_me'
+    }
+  }),
+
+  notifications: {
+    purchases: {
+      to: 'EXLskills Support <support@exlskills.com>'
+    },
+    email: {
+      from: 'EXLskills <no-reply@exlskills.com>'
     }
   },
 
