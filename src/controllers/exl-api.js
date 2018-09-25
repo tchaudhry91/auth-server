@@ -6,8 +6,6 @@ import {
   BadRequestError,
   NotFoundError
 } from '../helpers/server';
-import { getAllActiveSubscriptionsForCustomer } from '../zoho/subscriptions';
-import { addChargeToSubscription } from '../zoho/add-charge';
 import { logger } from '../utils/logger';
 
 async function getUserSubscriptionLevel(apiKey, userID) {
@@ -56,7 +54,7 @@ async function purchaseCreditsForUser(apiKey, userID, purchaseN) {
     return Promise.reject(BadRequestError());
   }
   try {
-    let dbUser = await User.findOne({
+    const dbUser = await User.findOne({
       _id: userID
     }).exec();
 
@@ -64,87 +62,28 @@ async function purchaseCreditsForUser(apiKey, userID, purchaseN) {
       return Promise.reject(NotFoundError());
     }
 
-    const custId = user.stripe ? user.stripe.customer_id : null;
-    const creditsSubId = user.stripe ? user.stripe.credits_sub_id : null;
-    const creditsSubItemId = user.stripe? user.stripe.credits_sub_item_id : null;
+    const custId = dbUser.stripe ? dbUser.stripe.customer_id : null;
+    const creditsSubId = dbUser.stripe ? dbUser.stripe.credits_sub_id : null;
+    const creditsSubItemId = dbUser.stripe
+      ? dbUser.stripe.credits_sub_item_id
+      : null;
     if (!custId || !creditsSubId || !creditsSubItemId) {
-        return Promise.reject(ForbiddenError());
+      return Promise.reject(ForbiddenError());
     }
     await config.stripe.usageRecords.create(creditsSubItemId, {
-        quantity: purchaseN,
-        timestamp: Math.round(new Date().getTime() / 1000)
+      quantity: purchaseN,
+      timestamp: Math.round(new Date().getTime() / 1000)
     });
     return {
       success: true
-    }
-  } catch (error) {
-    logger.error(error);
-    return Promise.reject(InternalServerError());
-  }
-}
-
-async function addChargeToUser(apiKey, userID, reqObj) {
-  const { chargeAmtUSD, chargeDescription } = reqObj;
-  if (!apiKey || apiKey !== config.exlInternalAPI.key) {
-    return Promise.reject(ForbiddenError());
-  }
-  if (!userID) {
-    return Promise.reject(BadRequestError());
-  }
-  try {
-    let dbUser = await User.findOne({
-      _id: userID
-    }).select({ subscription: 1, zoho_customer_id: 1 });
-
-    if (!dbUser) {
-      return Promise.reject(NotFoundError());
-    }
-
-    if (!dbUser.subscription || dbUser.subscription.length === 0) {
-      return {
-        subscriptionLevel: 0
-      };
-    }
-
-    let mostPrivilegedSubscriptionLevel = dbUser.subscription[0].level;
-
-    dbUser.subscription.forEach(element => {
-      if (element.level > mostPrivilegedSubscriptionLevel) {
-        mostPrivilegedSubscriptionLevel = element.level;
-      }
-    });
-
-    if (mostPrivilegedSubscriptionLevel < 1000) {
-      return Promise.reject(BadRequestError());
-    }
-
-    if (!dbUser.zoho_customer_id) {
-      return Promise.reject(BadRequestError());
-    }
-
-    const activeSubs = await getAllActiveSubscriptionsForCustomer(
-      dbUser.zoho_customer_id
-    );
-    if (!activeSubs || activeSubs.length < 1) {
-      return Promise.reject(BadRequestError());
-    }
-
-    const invoice = await addChargeToSubscription(
-      activeSubs[0].subscription_id,
-      chargeAmtUSD,
-      chargeDescription
-    );
-    return {
-      invoiceId: invoice.invoice_id
     };
   } catch (error) {
-    logger.error(error);
+    logger.error('Purchase credits error: ' + error);
     return Promise.reject(InternalServerError());
   }
 }
 
 module.exports = {
   getUserSubscriptionLevel,
-  addChargeToUser,
   purchaseCreditsForUser
 };

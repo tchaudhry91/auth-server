@@ -1,11 +1,12 @@
 import KeycloakEnvConfig from '@exlinc/keycloak-passport/configuration';
+import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import path from 'path';
 
 // Load whatever's in the .env file
 dotenv.config();
 
-module.exports = {
+export default {
   environment: process.env.NODE_ENV,
   memcachedUrl: process.env.MEMCACHED_URL,
   sessionSecret: process.env.SESSION_SECRET || 'set_me',
@@ -22,6 +23,13 @@ module.exports = {
     callbackURL: process.env.KEYCLOAK_CALLBACK_URL || '/auth/keycloak/callback',
     passReqToCallback: true
   }),
+
+  platform: {
+    name: "EXLskills",
+    url: "https://exlskills.com",
+    supportEmail: 'support@exlskills.com',
+    helpCenterUrl: 'https://help.exlskills.com/'
+  },
 
   cookies: {
     domain: process.env.COOKIES_DOMAIN || 'localhost'
@@ -57,13 +65,22 @@ module.exports = {
 
   userDataCookieName: process.env.USER_DATA_COOKIE_NAME || 'user_data',
 
-  smtp: {
+  smtp: nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.sendgrid.net',
-    port: process.env.SMTP_PORT || 25,
-    secure: true,
+    port: process.env.SMTP_PORT || 587,
+    requiresAuth: true,
     auth: {
       user: process.env.SMTP_USERNAME || 'apikey',
       pass: process.env.SMTP_PASSWORD || 'set_me'
+    }
+  }),
+
+  notifications: {
+    purchases: {
+      to: 'EXLskills Support <support@exlskills.com>'
+    },
+    email: {
+      from: 'EXLskills <no-reply@exlskills.com>'
     }
   },
 
@@ -81,55 +98,15 @@ module.exports = {
     url: process.env.BOT_MANAGER_API_URL || 'http://localhost:2999'
   },
 
-  stripe: require("stripe")(process.env.STRIPE_SECRET_KEY || "set_me"),
+  stripe: require('stripe')(process.env.STRIPE_SECRET_KEY || 'set_me'),
 
   stripePlans: {
     creditsMetered: {
-      id: process.env.STRIPE_PLANS_CREDITS_METERED_ID || 'set_me',
+      defaultCcy: 'USD',
+      planIds: {
+        'USD': process.env.STRIPE_PLANS_CREDITS_METERED_USD_ID || 'set_me'
+      },
       level: process.env.STRIPE_PLANS_CREDITS_METERED_LEVEL || 2000
-    }
-  },
-
-  // TODO deprecated - remove
-  zoho: {
-    apiBaseUrl: 'https://billing.exlinc.com/api/v1/',
-    orgId: process.env.ZOHO_ORG_ID || 'set_me',
-    authToken: process.env.ZOHO_AUTH_TOKEN || 'set_me',
-    eventsApiKey: process.env.ZOHO_EVENTS_API_KEY || 'set_me',
-    plans: {
-      essentials: {
-        level: 3000,
-        monthly: {
-          planCode: 'EXLskills-008',
-          boostsPerCycle: 2
-        },
-        annual: {
-          planCode: 'EXLskills-009',
-          boostsPerCycle: 24
-        }
-      },
-      professional: {
-        level: 5000,
-        monthly: {
-          planCode: 'EXLskills-010',
-          boostsPerCycle: 2
-        },
-        annual: {
-          planCode: 'EXLskills-011',
-          boostsPerCycle: 24
-        }
-      },
-      business: {
-        level: 7000,
-        monthly: {
-          planCode: 'EXLskills-012',
-          boostsPerCycle: 2
-        },
-        annual: {
-          planCode: 'EXLskills-015',
-          boostsPerCycle: 24
-        }
-      }
     }
   },
 

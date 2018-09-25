@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { id_gen } from '../helpers/url-id-generator';
-import { createDumpUser, authenticate } from './user-statics';
+import { createDumpUser, authenticate } from './user-statics-model';
 import UserCourseRoleSchema from './user-course-role-model';
 import UserSubscriptionSchema from './user-subscription-model';
 import AuthStrategySchema from './auth-strategy-model';
@@ -80,13 +80,6 @@ const UserSchema = new mongoose.Schema(
     course_roles: {
       type: [UserCourseRoleSchema],
       default: []
-    },
-    zoho_customer_id: {
-      type: String,
-      index: true
-    },
-    zoho_ccy_code: {
-      type: String
     },
     stripe: {
       type: UserStripeSchema

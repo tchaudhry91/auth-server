@@ -1,6 +1,6 @@
 import { logger } from '../utils/logger';
 
-const config = require('../config');
+import config from '../config';
 const mongoose = require('mongoose');
 
 mongoose.Promise = Promise;
@@ -8,6 +8,8 @@ mongoose.Promise = Promise;
 const reconnectTimeout = config.mongo.reconnectTimeout;
 
 function connect() {
+  //logger.debug(config.mongo.uri);
+  logger.debug(config.mongo.db);
   mongoose
     .connect(
       config.mongo.uri + '/' + config.mongo.db,

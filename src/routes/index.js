@@ -7,7 +7,13 @@ import { logger } from '../utils/logger';
 const controllers = require('../controllers');
 
 const router = express.Router();
-const { auth, subscriptions, healthCheck, exlAPI, credits } = controllers;
+const {
+  auth,
+  healthCheck,
+  exlAPI,
+  credits,
+  purchase
+} = controllers;
 
 /**
  * Handles controller execution and responds to user (API version).
@@ -55,26 +61,6 @@ router.post(
   c(auth.intercomUserHash, req => [req.cookies])
 );
 
-// TODO - Deprecated, remove
-router.get(
-  '/subscriptions/hostedpages',
-  c(subscriptions.createHostedPageForSubscription, req => [
-    req.cookies,
-    req.query.planCode,
-    req.query.ccy
-  ])
-);
-
-// TODO - Deprecated, remove
-router.get(
-  '/subscriptions/hostedpages/redirect',
-  c(subscriptions.redirectToHostedPageForSubscription, req => [
-    req.cookies,
-    req.query.planCode,
-    req.query.ccy
-  ])
-);
-
 router.get('/health-check', c(healthCheck.healthCheckIndex, req => []));
 
 router.get(
@@ -82,16 +68,6 @@ router.get(
   c(exlAPI.getUserSubscriptionLevel, req => [
     req.query.apiKey,
     req.params.userId
-  ])
-);
-
-// TODO - Deprecated, remove
-router.post(
-  '/exl/users/:userId/charges',
-  c(exlAPI.addChargeToUser, req => [
-    req.query.apiKey,
-    req.params.userId,
-    req.body
   ])
 );
 
@@ -118,17 +94,29 @@ router.get(
 );
 
 router.get('/me/credits', c(credits.getCredits, req => [req.cookies]));
-router.post('/me/credits/purchase', c(credits.purchaseCredits, req => [req.cookies, req.query.purchaseN]));
-router.post('/me/credits/enroll', c(credits.enroll, req => [req.cookies, req.body.stripeToken]));
+router.post(
+  '/me/credits/purchase',
+  c(credits.purchaseCredits, req => [req.cookies, req.query.purchaseN])
+);
+router.post(
+  '/me/credits/enroll',
+  c(credits.enroll, req => [req.cookies, req.body.stripeToken, req.body.ccy])
+);
 router.post('/me/credits/unenroll', c(credits.unenroll, req => [req.cookies]));
-router.get('/me/credits/membership', c(credits.membershipStatus, req => [req.cookies]));
+router.get(
+  '/me/credits/membership',
+  c(credits.membershipStatus, req => [req.cookies])
+);
+router.get(
+  '/me/credits/current-usage',
+  c(credits.currentUsage, req => [req.cookies])
+)
 
 router.post('/me/logout', c(auth.logout, req => [req.cookies]));
 
-// TODO - Deprecated, remove
 router.post(
-  '/zoho/subscriptions/events',
-  c(subscriptions.zohoPostEvent, req => [req.query.apiKey, req.body])
+  '/purchase',
+  c(purchase.purchaseHandler, req => [req.cookies, req.body.payer_user_id, req.body.user_id, req.body.item])
 );
 
 /**
@@ -152,4 +140,4 @@ router.use((err, req, res, _next) => {
   });
 });
 
-module.exports = router;
+export default router;
