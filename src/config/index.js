@@ -102,7 +102,10 @@ export default {
 
   stripePlans: {
     creditsMetered: {
-      id: process.env.STRIPE_PLANS_CREDITS_METERED_ID || 'set_me',
+      defaultCcy: 'USD',
+      planIds: {
+        'USD': process.env.STRIPE_PLANS_CREDITS_METERED_USD_ID || 'set_me'
+      },
       level: process.env.STRIPE_PLANS_CREDITS_METERED_LEVEL || 2000
     }
   },

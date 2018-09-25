@@ -65,7 +65,7 @@ async function purchaseCredits(cookies, nToPurchase) {
   }
 }
 
-async function enroll(cookies, stripeToken) {
+async function enroll(cookies, stripeToken, ccy) {
   logger.debug(`in enroll (for credits)`);
   let user;
   try {
@@ -78,6 +78,17 @@ async function enroll(cookies, stripeToken) {
   if (!stripeToken || !stripeToken.token || !stripeToken.token.id) {
     return Promise.reject(BadRequestError());
   }
+
+  if (!ccy) {
+    ccy = config.stripePlans.creditsMetered.defaultCcy;
+  }
+
+  const planId = config.stripePlans.creditsMetered.planIds[ccy]
+
+  if (!planId) {
+    return Promise.reject(BadRequestError());
+  }
+
   // Check that they have an email (users with emails are automatically not demo users)
   if (!user.primary_email) {
     return Promise.reject(
@@ -123,12 +134,14 @@ async function enroll(cookies, stripeToken) {
         customer: custId,
         items: [
           {
-            plan: config.stripePlans.creditsMetered.id
+            plan: planId
           }
         ]
       });
       creditsSubItemId = stripeSub.items.data[0].id;
       user.stripe.credits_sub_id = stripeSub.id;
+      user.stripe.credits_sub_ccy = ccy;
+      user.stripe.credits_sub_plan_id = planId;
       user.stripe.credits_sub_item_id = creditsSubItemId;
       if (
         user.subscription[0].level < config.stripePlans.creditsMetered.level
@@ -162,6 +175,8 @@ async function unenroll(cookies) {
     try {
       await config.stripe.subscriptions.del(creditsSubId);
       user.stripe.credits_sub_id = null;
+      user.stripe.credits_sub_ccy = null;
+      user.stripe.credits_sub_plan_id = null;
       user.stripe.credits_sub_item_id = null;
       user.subscription[0].level = 1;
       await user.save();
@@ -170,6 +185,39 @@ async function unenroll(cookies) {
     }
   }
   return { success: true };
+}
+
+async function currentUsage(cookies) {
+  logger.debug(`in currentUsage (for credits)`);
+  let user;
+  try {
+    user = await User.findById(
+      decodeToken(cookies[config.jwt.cookieName]).user_id
+    ).exec();
+  } catch (error) {
+    return Promise.reject(ForbiddenError());
+  }
+  const custId = user.stripe ? user.stripe.customer_id : null;
+  const creditsSubId = user.stripe ? user.stripe.credits_sub_id : null;
+  const creditsSubItemId = user.stripe ? user.stripe.credits_sub_item_id : null;
+  if (!(custId && creditsSubId && creditsSubItemId)) {
+    return Promise.reject(BadRequestError());
+  }
+  try {
+    const subResp = await config.stripe.subscriptions.retrieve(creditsSubId)
+    const recordsResp = await config.stripe.usageRecordSummaries.list(creditsSubItemId, {
+      limit: 1
+    });
+    if (!(recordsResp && recordsResp.data && recordsResp.data[0])) {
+      return Promise.reject(InternalServerError());
+    }
+    return {
+      totalUsage: recordsResp.data[0].total_usage,
+      endsAt: subResp.current_period_end
+     };
+  } catch (err) {
+    return Promise.reject(InternalServerError());
+  }
 }
 
 async function membershipStatus(cookies) {
@@ -197,5 +245,6 @@ module.exports = {
   purchaseCredits,
   enroll,
   unenroll,
-  membershipStatus
+  membershipStatus,
+  currentUsage
 };

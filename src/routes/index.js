@@ -100,13 +100,17 @@ router.post(
 );
 router.post(
   '/me/credits/enroll',
-  c(credits.enroll, req => [req.cookies, req.body.stripeToken])
+  c(credits.enroll, req => [req.cookies, req.body.stripeToken, req.body.ccy])
 );
 router.post('/me/credits/unenroll', c(credits.unenroll, req => [req.cookies]));
 router.get(
   '/me/credits/membership',
   c(credits.membershipStatus, req => [req.cookies])
 );
+router.get(
+  '/me/credits/current-usage',
+  c(credits.currentUsage, req => [req.cookies])
+)
 
 router.post('/me/logout', c(auth.logout, req => [req.cookies]));
 
