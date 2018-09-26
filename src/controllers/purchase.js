@@ -141,7 +141,7 @@ async function buyCourseCertificate(payer, user, item) {
     await spendBoosts(payer._id, amount, true);
   } catch (error) {
     throw new Error(
-      'Failed to checkout. Please check that you have a valid credit card on file or sufficient credits available.'
+      'Failed to checkout. Please check that you have a valid credit card on file or sufficient coins available.'
     );
   }
   try {
@@ -186,10 +186,10 @@ async function buyCourseCertificate(payer, user, item) {
             <p>After you complete this process, you will then recieve your certificate electronically along with a link for your potential employers to validate it - with your permission.</p>
             <strong>Order Total: ${amount} ${
     config.platform.name
-  } Credits (Approx. US$${amount})</strong>
-            <p>NOTE: If you had a previous credit balance with ${
+  } Coins (US$${amount})</strong>
+            <p>NOTE: If you had a previous coin balance with ${
     config.platform.name
-  }, your credits will be deducted to cover this purchase. In the event that your account didn't have sufficient credits, the remaining required credits were added to your usage for this month and will be billed at the end of your current billing period.</p>
+  }, your coins will be deducted to cover this purchase. In the event that your account didn't have sufficient coins, the remaining required coins were added to your usage for this month and will be billed at the end of your current billing period.</p>
             <p>Please see our help center and/or message support <a href="${
     config.platform.helpCenterUrl
   }">here</a> if you have any questions/concerns.</p>
@@ -227,7 +227,7 @@ async function buyCourseCertificate(payer, user, item) {
         </code>
         <p>Order Total: </p>
         <code>
-          Credits: ${amount}
+          Coins: ${amount}
         </code>
         <p>For reference, your order ID is: ${response.order_id}</p>
       </body>
@@ -378,10 +378,10 @@ async function buyCourseRun(payer, user, item) {
             <p>In the event of any course schedule changes, your ${config.platform.name} Success Manager will also notify you as early as possible. If you're unable to attend a live session in the series that you signed up, you'll be able to download a recording online shortly after the session is completed.</p>
             <strong>Order Total: ${amount} ${
     config.platform.name
-  } Credits (Approx. US$${amount})</strong>
-            <p>NOTE: If you had a previous credit balance with ${
+  } Coins (US$${amount})</strong>
+            <p>NOTE: If you had a previous coin balance with ${
     config.platform.name
-  }, your credits will be deducted to cover this purchase. In the event that your account didn't have sufficient credits, the remaining required credits were added to your usage for this month and will be billed at the end of your current billing period.</p>
+  }, your coins will be deducted to cover this purchase. In the event that your account didn't have sufficient coins, the remaining required coins were added to your usage for this month and will be billed at the end of your current billing period.</p>
             <p>Please see our help center and/or message support <a href="${
     config.platform.helpCenterUrl
   }">here</a> if you have any questions/concerns.</p>
@@ -418,7 +418,7 @@ async function buyCourseRun(payer, user, item) {
         </code>
         <p>Order Total: </p>
         <code>
-          Credits: ${amount}
+          Coins: ${amount}
         </code>
         <p>For reference, your order ID is: ${response.order_id}</p>
       </body>
