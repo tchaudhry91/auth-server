@@ -398,7 +398,7 @@ async function buyCourseRun(payer, user, item) {
     await config.smtp.sendMail({
       from: config.notifications.email.from,
       to: config.platform.supportEmail,
-      subject: `${config.platform.name} Certificate Order Notification`,
+      subject: `${config.platform.name} Live Series Order Notification`,
       html: `<html>
       <head>
       </head>
