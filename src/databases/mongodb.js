@@ -2,6 +2,7 @@ import { logger } from '../utils/logger';
 
 import config from '../config';
 const mongoose = require('mongoose');
+import User from '../models/user-model';
 
 mongoose.Promise = Promise;
 
@@ -41,6 +42,9 @@ module.exports = () => {
 
   db.on('connected', () => {
     logger.info('Connected to MongoDB!');
+    logger.debug(
+      'Mongo DB ' + User.db.host + ':' + User.db.port + '/' + User.db.name
+    );
   });
 
   db.once('open', () => {

@@ -22,10 +22,15 @@ async function getCredits(cookies) {
   } catch (error) {
     return Promise.reject(ForbiddenError());
   }
-  const boostsResult = await getBoosts(decoded.user_id);
-  return {
-    creditsCount: boostsResult
-  };
+  try {
+    const boostsResult = await getBoosts(decoded.user_id);
+    return {
+      creditsCount: boostsResult
+    };
+  } catch (err) {
+    logger.error('Error getting credits: ' + err);
+    return Promise.reject(InternalServerError());
+  }
 }
 
 async function purchaseCredits(cookies, nToPurchase) {
@@ -83,7 +88,7 @@ async function enroll(cookies, stripeToken, ccy) {
     ccy = config.stripePlans.creditsMetered.defaultCcy;
   }
 
-  const planId = config.stripePlans.creditsMetered.planIds[ccy]
+  const planId = config.stripePlans.creditsMetered.planIds[ccy];
 
   if (!planId) {
     return Promise.reject(BadRequestError());
@@ -204,17 +209,20 @@ async function currentUsage(cookies) {
     return Promise.reject(BadRequestError());
   }
   try {
-    const subResp = await config.stripe.subscriptions.retrieve(creditsSubId)
-    const recordsResp = await config.stripe.usageRecordSummaries.list(creditsSubItemId, {
-      limit: 1
-    });
+    const subResp = await config.stripe.subscriptions.retrieve(creditsSubId);
+    const recordsResp = await config.stripe.usageRecordSummaries.list(
+      creditsSubItemId,
+      {
+        limit: 1
+      }
+    );
     if (!(recordsResp && recordsResp.data && recordsResp.data[0])) {
       return Promise.reject(InternalServerError());
     }
     return {
       totalUsage: recordsResp.data[0].total_usage,
       endsAt: subResp.current_period_end
-     };
+    };
   } catch (err) {
     return Promise.reject(InternalServerError());
   }
