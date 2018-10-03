@@ -12,7 +12,8 @@ const {
   healthCheck,
   exlAPI,
   credits,
-  purchase
+  purchase,
+  stripeConnect
 } = controllers;
 
 /**
@@ -117,6 +118,15 @@ router.post('/me/logout', c(auth.logout, req => [req.cookies]));
 router.post(
   '/purchase',
   c(purchase.purchaseHandler, req => [req.cookies, req.body.payer_user_id, req.body.user_id, req.body.item])
+);
+
+router.get(
+  '/stripe-connect/oauth/redirect',
+  c(stripeConnect.stripeOAuthRedirect, req => [req.cookies, req.query.redirectUrl])
+);
+router.get(
+  '/stripe-connect/oauth/callback',
+  c(stripeConnect.stripeOAuthCallback, req => [req.cookies, req.query.code, req.query.state])
 );
 
 /**

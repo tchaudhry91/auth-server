@@ -5,7 +5,7 @@ export default new mongoose.Schema(
     _id: false,
     customer_id: {
       type: String,
-      index: true,
+      index: true
     },
     credits_sub_id: {
       type: String,
@@ -20,6 +20,9 @@ export default new mongoose.Schema(
     credits_sub_item_id: {
       type: String,
       index: true
+    },
+    connect_account_id: {
+      type: String
     }
   },
   {

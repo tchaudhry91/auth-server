@@ -3,11 +3,13 @@ const exlAPI = require('./exl-api');
 const healthCheck = require('./health-check');
 const credits = require('./credits');
 const purchase = require('./purchase');
+const stripeConnect = require('./stripe-connect');
 
 module.exports = {
   auth,
   healthCheck,
   exlAPI,
   credits,
-  purchase
+  purchase,
+  stripeConnect
 };

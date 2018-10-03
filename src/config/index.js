@@ -25,8 +25,8 @@ export default {
   }),
 
   platform: {
-    name: "EXLskills",
-    url: "https://exlskills.com",
+    name: 'EXLskills',
+    url: 'https://exlskills.com',
     supportEmail: 'support@exlskills.com',
     helpCenterUrl: 'https://help.exlskills.com/'
   },
@@ -100,11 +100,18 @@ export default {
 
   stripe: require('stripe')(process.env.STRIPE_SECRET_KEY || 'set_me'),
 
+  stripeConnect: {
+    // Connect client secret is the same as the global client secret, so no need to introduce a new env var
+    clientSecret: process.env.STRIPE_SECRET_KEY || 'set_me',
+    clientId: process.env.STRIPE_CONNECT_CLIENT_ID || 'set_me',
+    redirectUri: process.env.STRIPE_CONNECT_REDIRECT_URI || 'https://auth-api.exlskills.com/stripe-connect/oauth/callback'
+  },
+
   stripePlans: {
     creditsMetered: {
       defaultCcy: 'USD',
       planIds: {
-        'USD': process.env.STRIPE_PLANS_CREDITS_METERED_USD_ID || 'set_me'
+        USD: process.env.STRIPE_PLANS_CREDITS_METERED_USD_ID || 'set_me'
       },
       level: process.env.STRIPE_PLANS_CREDITS_METERED_LEVEL || 2000
     }
