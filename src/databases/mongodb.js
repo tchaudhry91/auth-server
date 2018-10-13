@@ -11,6 +11,8 @@ const reconnectTimeout = config.mongo.reconnectTimeout;
 function connect() {
   //logger.debug(config.mongo.uri);
   logger.debug(config.mongo.db);
+
+  mongoose.set('useCreateIndex', true);
   mongoose
     .connect(
       config.mongo.uri + '/' + config.mongo.db,
@@ -20,8 +22,6 @@ function connect() {
       }
     )
     .catch(() => {});
-
-  // mongoose.set('useCreateIndex', true);
 
   if (config.db_debug_log) {
     mongoose.set('debug', true);
