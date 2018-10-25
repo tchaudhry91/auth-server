@@ -37,3 +37,5 @@ export default new mongoose.Schema(
 
 export const ITEM_CATEGORY_COURSE_CERTIFICATE = 'course_cert';
 export const ITEM_CATEGORY_COURSE_RUN = 'course_run';
+export const ITEM_CATEGORY_INSTRUCTOR_BOOKING_DEPOSIT =
+  'instructor_booking_deposit';

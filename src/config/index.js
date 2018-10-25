@@ -2,9 +2,15 @@ import KeycloakEnvConfig from '@exlinc/keycloak-passport/configuration';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import path from 'path';
+import timekit from 'timekit-sdk';
 
 // Load whatever's in the .env file
 dotenv.config();
+
+// Setup the Timekit SDK
+timekit.configure({
+  appKey: process.env.TIMEKIT_SK || 'set_me'
+});
 
 export default {
   environment: process.env.NODE_ENV,

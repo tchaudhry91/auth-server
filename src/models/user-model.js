@@ -7,6 +7,7 @@ import AuthStrategySchema from './auth-strategy-model';
 import UserOrganizationRoleSchema from './user-organization-role-model';
 import UserStripeSchema from './user-stripe-model';
 import IntlStringSchema from './intl-string-model';
+import InstructorTimekitSchema from './instructor-timekit-model';
 
 /**
  * User Schema
@@ -83,6 +84,9 @@ const UserSchema = new mongoose.Schema(
     },
     stripe: {
       type: UserStripeSchema
+    },
+    instructor_timekit: {
+      type: InstructorTimekitSchema
     }
   },
   {
