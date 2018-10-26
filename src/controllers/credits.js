@@ -43,22 +43,31 @@ async function purchaseCredits(cookies, nToPurchase) {
   } catch (error) {
     return Promise.reject(ForbiddenError());
   }
-  nToPurchase = parseInt(nToPurchase);
+  nToPurchase = parseFloat(nToPurchase);
   if (isNaN(nToPurchase)) {
     return Promise.reject(BadRequestError());
   }
+  if (nToPurchase < 1) {
+    return Promise.reject(BadRequestError());
+  }
+  // Note: Make sure we have precision to hundredths at most
+  nToPurchase = Math.round(nToPurchase * 100) / 100;
   const custId = user.stripe ? user.stripe.customer_id : null;
-  const creditsSubId = user.stripe ? user.stripe.credits_sub_id : null;
-  const creditsSubItemId = user.stripe ? user.stripe.credits_sub_item_id : null;
-  if (!custId || !creditsSubId || !creditsSubItemId) {
+  const cardSaved = user.stripe ? user.stripe.card_saved : null;
+  let prefCCY = user.stripe ? user.stripe.preferred_ccy : null;
+  if (!custId || !cardSaved) {
     return Promise.reject(ForbiddenError());
+  }
+  if (!!prefCCY) {
+    prefCCY = 'USD';
   }
 
   try {
     await createBoosts(user._id, nToPurchase, 31556926 * 99);
-    await config.stripe.usageRecords.create(creditsSubItemId, {
-      quantity: nToPurchase,
-      timestamp: Math.round(new Date().getTime() / 1000)
+    await config.stripe.charges.create({
+      currency: prefCCY,
+      amount: Math.round(nToPurchase * 100), // NOTE: Stripe doesn't take floats, so we need to multiply 100 and then do a round to make sure it's an int
+      customer: custId
     });
     const boostsResult = await getBoosts(user._id);
     return {
@@ -85,13 +94,7 @@ async function enroll(cookies, stripeToken, ccy) {
   }
 
   if (!ccy) {
-    ccy = config.stripePlans.creditsMetered.defaultCcy;
-  }
-
-  const planId = config.stripePlans.creditsMetered.planIds[ccy];
-
-  if (!planId) {
-    return Promise.reject(BadRequestError());
+    ccy = config.stripeCredits.defaultCcy;
   }
 
   // Check that they have an email (users with emails are automatically not demo users)
@@ -106,9 +109,9 @@ async function enroll(cookies, stripeToken, ccy) {
     );
   }
   let custId = user.stripe ? user.stripe.customer_id : null;
-  let creditsSubItemId = user.stripe ? user.stripe.credits_sub_item_id : null;
+  let cardSaved = user.stripe ? user.stripe.card_saved : null;
   logger.debug('custId ' + custId);
-  logger.debug('creditsSubItemId ' + creditsSubItemId);
+  logger.debug('cardSaved ' + cardSaved);
   if (!custId) {
     logger.debug('about to create a customer');
     try {
@@ -124,38 +127,31 @@ async function enroll(cookies, stripeToken, ccy) {
       custId = stripeCustomer.id;
       // We set it to a wholly new object since if they didn't have a cust ID it's safe to assume that there is no other data
       user.stripe = {
-        customer_id: custId
+        customer_id: custId,
+        preferred_ccy: ccy,
+        card_saved: true
       };
       await user.save();
+      cardSaved = true;
     } catch (err) {
       logger.error('Error creating/saving stripe customer: ' + err);
       return Promise.reject(InternalServerError());
     }
   }
 
-  if (!creditsSubItemId) {
+  if (!cardSaved) {
     try {
-      const stripeSub = await config.stripe.subscriptions.create({
-        customer: custId,
-        items: [
-          {
-            plan: planId
-          }
-        ]
+      const stripeSub = await config.stripe.customers.update(custId, {
+        source: stripeToken.token.id
       });
-      creditsSubItemId = stripeSub.items.data[0].id;
-      user.stripe.credits_sub_id = stripeSub.id;
-      user.stripe.credits_sub_ccy = ccy;
-      user.stripe.credits_sub_plan_id = planId;
-      user.stripe.credits_sub_item_id = creditsSubItemId;
-      if (
-        user.subscription[0].level < config.stripePlans.creditsMetered.level
-      ) {
-        user.subscription[0].level = config.stripePlans.creditsMetered.level;
+      user.stripe.preferred_ccy = ccy;
+      user.stripe.card_saved = true;
+      if (user.subscription[0].level < config.stripeCredits.level) {
+        user.subscription[0].level = config.stripeCredits.level;
       }
       await user.save();
     } catch (err) {
-      logger.error('Error creating/saving stripe subscription: ' + err);
+      logger.error('Error creating/saving stripe credit card: ' + err);
       return Promise.reject(InternalServerError());
     }
   }
@@ -174,58 +170,24 @@ async function unenroll(cookies) {
     return Promise.reject(ForbiddenError());
   }
   const custId = user.stripe ? user.stripe.customer_id : null;
-  const creditsSubId = user.stripe ? user.stripe.credits_sub_id : null;
-  if (custId && creditsSubId) {
-    // Cancel the credit sub and remove it from the user's stripe record
+  const cardSaved = user.stripe ? user.stripe.card_saved : null;
+  if (custId && cardSaved) {
     try {
-      await config.stripe.subscriptions.del(creditsSubId);
-      user.stripe.credits_sub_id = null;
-      user.stripe.credits_sub_ccy = null;
-      user.stripe.credits_sub_plan_id = null;
-      user.stripe.credits_sub_item_id = null;
+      const custCards = await config.stripe.customers.listCards(custId);
+      if (custCards && custCards.data && custCards.data.length) {
+        for (let custCard of custCards.data) {
+          await config.stripe.customers.deleteCard(custId, custCard.id);
+        }
+      }
+      user.stripe.card_saved = false;
       user.subscription[0].level = 1;
       await user.save();
     } catch (err) {
+      console.log(err);
       return Promise.reject(InternalServerError());
     }
   }
   return { success: true };
-}
-
-async function currentUsage(cookies) {
-  logger.debug(`in currentUsage (for credits)`);
-  let user;
-  try {
-    user = await User.findById(
-      decodeToken(cookies[config.jwt.cookieName]).user_id
-    ).exec();
-  } catch (error) {
-    return Promise.reject(ForbiddenError());
-  }
-  const custId = user.stripe ? user.stripe.customer_id : null;
-  const creditsSubId = user.stripe ? user.stripe.credits_sub_id : null;
-  const creditsSubItemId = user.stripe ? user.stripe.credits_sub_item_id : null;
-  if (!(custId && creditsSubId && creditsSubItemId)) {
-    return Promise.reject(BadRequestError());
-  }
-  try {
-    const subResp = await config.stripe.subscriptions.retrieve(creditsSubId);
-    const recordsResp = await config.stripe.usageRecordSummaries.list(
-      creditsSubItemId,
-      {
-        limit: 1
-      }
-    );
-    if (!(recordsResp && recordsResp.data && recordsResp.data[0])) {
-      return Promise.reject(InternalServerError());
-    }
-    return {
-      totalUsage: recordsResp.data[0].total_usage,
-      endsAt: subResp.current_period_end
-    };
-  } catch (err) {
-    return Promise.reject(InternalServerError());
-  }
 }
 
 async function membershipStatus(cookies) {
@@ -253,6 +215,5 @@ module.exports = {
   purchaseCredits,
   enroll,
   unenroll,
-  membershipStatus,
-  currentUsage
+  membershipStatus
 };

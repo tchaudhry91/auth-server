@@ -108,10 +108,6 @@ router.get(
   '/me/credits/membership',
   c(credits.membershipStatus, req => [req.cookies])
 );
-router.get(
-  '/me/credits/current-usage',
-  c(credits.currentUsage, req => [req.cookies])
-)
 
 router.post('/me/logout', c(auth.logout, req => [req.cookies]));
 
