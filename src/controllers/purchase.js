@@ -10,10 +10,12 @@ import {
   insertOrderRecord
 } from '../db-handlers/user-orders-handler';
 import { fetchDeliveryStructurePricingById } from '../db-handlers/course-delivery-price-fetch';
+import { fetchDigitalDiplomaById } from '../db-handlers/digital-diploma-fetch';
 import { basicFind } from '../db-handlers/basic-query-handler';
 import {
   ITEM_CATEGORY_COURSE_CERTIFICATE,
   ITEM_CATEGORY_COURSE_RUN,
+  ITEM_CATEGORY_DIGITAL_DIPLOMA_PLAN,
   ITEM_CATEGORY_INSTRUCTOR_BOOKING_DEPOSIT
 } from '../models/order-item-model';
 import { getStringByLocale } from '../helpers/intl-string';
@@ -96,8 +98,188 @@ async function purchaseHandler(cookies, payer_user_id, user_id, item) {
         return Promise.reject(BadRequestError(error.message));
       }
       break;
+    case ITEM_CATEGORY_DIGITAL_DIPLOMA_PLAN:
+      try {
+        response = await purchaseDigitalDiplomaPlan(user, user, item);
+      } catch (error) {
+        logger.error(`error in purchaseDigitalDiplomaPlan ` + error);
+        return Promise.reject(BadRequestError(error.message));
+      }
+      break;
     default:
       return Promise.reject(BadRequestError('Invalid item category'));
+  }
+  return response;
+}
+
+async function purchaseDigitalDiplomaPlan(payer, user, item) {
+  let response = {};
+  logger.debug(`in purchaseDigitalDiplomaPlan`);
+
+  const dd_id = item.refs.dd_id;
+  const dd_plan_id = item.refs.dd_plan_id;
+  const shipping_info = item.options.shipping_info;
+
+  if (!dd_id || !dd_plan_id || !shipping_info || !shipping_info.full_name || !shipping_info.addr_1 || !shipping_info.city || !shipping_info.state || !shipping_info.country || !shipping_info.zip_code) {
+    throw new Error('Purchase Info Details Missing');
+  }
+
+  const alreadyBought = await fetchByUserAndItemRefId(
+    user._id,
+    ITEM_CATEGORY_COURSE_RUN,
+    dd_plan_id
+  );
+
+  // If the user has already purchased a seat, then return
+  if (alreadyBought) {
+    response.msg =
+      'The User has already purchased this digital diploma plan. No action is necessary ';
+    return response;
+  }
+
+  const digitalDiploma = await fetchDigitalDiplomaById(dd_id);
+  logger.debug(` digitalDiploma ` + JSON.stringify(digitalDiploma));
+
+  if (!digitalDiploma) {
+    throw new Error('Invalid digital diploma id or no longer available');
+  }
+
+  let ddPlan = null;
+  if (digitalDiploma.plans) {
+    ddPlan = digitalDiploma.plans.find(plan => plan.id === dd_plan_id);
+  }
+
+  if (!ddPlan || ddPlan.is_hidden) {
+    throw new Error('Invalid plan id');
+  }
+  if (new Date().getTime() > ddPlan.closes_at.getTime()) {
+    throw new Error('Plan has already expired');
+  }
+  if (new Date().getTime() < ddPlan.opens_at.getTime()) {
+    throw new Error('Plan has already expired');
+  }
+
+  let amount = ddPlan.cost;
+
+  logger.debug(` amount ` + amount);
+
+  if (amount <= 0) {
+    throw new Error('Invalid plan price');
+  }
+
+  try {
+    await spendBoosts(payer._id, amount, true);
+  } catch (error) {
+    throw new Error('Failed at checkout ' + error.message);
+  }
+
+  const itemObjArray = [
+    {
+      item_category: ITEM_CATEGORY_DIGITAL_DIPLOMA_PLAN,
+      amount: amount,
+      item_ref: {
+        dd_id,
+        dd_plan_id,
+        shipping_info
+      }
+    }
+  ];
+
+  try {
+    response.order_id = await insertOrderRecord(
+      user._id,
+      payer._id,
+      itemObjArray
+    );
+  } catch (error) {
+    throw new Error(
+      'Failed recording completed purchase. Please contact Support'
+    );
+  }
+
+  let notif_emails = [payer.primary_email];
+  if (payer.primary_email !== user.primary_email) {
+    notif_emails.push(user.primary_email);
+  }
+
+  try {
+    for (let ind = 0; ind < notif_emails.length; ind++) {
+      await config.smtp.sendMail({
+        from: config.notifications.email.from,
+        to: notif_emails[ind],
+        subject: `${config.platform.name} Order Confirmation`,
+        html: `<html>
+          <head>
+          </head>
+          <body>
+            <h3>Thank you for recent purchase of a ${getStringByLocale(ddPlan.title).text} for ${
+              getStringByLocale(digitalDiploma.title).text
+} with ${config.platform.name}!</h3>
+            <p>Your dedicated ${
+              config.platform.name
+} Success Manager will be in touch within 24 hours with:</p>
+            <ul>
+              <li>Links and credentials to all course content</li>
+              <li>Any extra required course materials/resources</li>
+              <li>An introduction to your instructor for the course</li>
+              <li>Shipping updates and tracking number(s) for your order</li>
+            </ul>
+            <p>If you have any questions in the meantime, please feel free to reach out to the ${
+              config.platform.name
+} support team via the chat icon on ${config.platform.name} or via email at <a href="mailto:support@exlskills.com">support@exlskills.com</a></p>
+            <p>Thank you for your purchase and we look forward to seeing you on ${config.platform.name}!</p>
+            <strong>Order Total: ${amount} ${
+          config.platform.name
+        } Coins (US$${amount})</strong>
+            <p>NOTE: If you had a previous coin balance with ${
+              config.platform.name
+}, your coins will be deducted to cover this purchase. In the event that your account didn't have sufficient coins, the remaining required coins were added to your usage for this month and will be billed at the end of your current billing period.</p>
+            <p>Please see our help center and/or message support <a href="${
+              config.platform.helpCenterUrl
+}">here</a> if you have any questions/concerns.</p>
+            <p>For reference, your order ID is: ${response.order_id}</p>
+          </body>
+        </html>`
+      });
+    }
+  } catch (error) {
+    throw new Error('Failed sending email to user. Please contact Support');
+  }
+
+  try {
+    await config.smtp.sendMail({
+      from: config.notifications.email.from,
+      to: config.platform.supportEmail,
+      subject: `${config.platform.name} Digital Diploma Order Notification`,
+      html: `<html>
+      <head>
+      </head>
+      <body>
+        <h3>Thank you for recent purchase of a ${getStringByLocale(ddPlan.title).text} for ${
+        getStringByLocale(digitalDiploma.title).text
+        } with ${config.platform.name}!</h3>
+        <p>Order Items: </p>
+        <code>
+          ${JSON.stringify(itemObjArray)}
+        </code>
+        <p>Paid for By: </p>
+        <code>
+          ${JSON.stringify(payer)}
+        </code>
+        <p>Bought for: </p>
+        <code>
+          ${JSON.stringify(user)}
+        </code>
+        <p>Order Total: </p>
+        <code>
+          Coins: ${amount}
+        </code>
+        <p>For reference, your order ID is: ${response.order_id}</p>
+      </body>
+    </html>`
+    });
+  } catch (error) {
+    throw new Error('Failed sending email to system. Please contact Support');
   }
   return response;
 }
@@ -139,7 +321,7 @@ async function payInstructorBookingDeposit(payer, user, item) {
   }
 
   try {
-    // TODO mark the billing paid on timekit
+    // Mark the billing paid on timekit
     const tkResp = await timekit.updateBooking({
       id: bookingId,
       action: 'pay',
@@ -147,7 +329,6 @@ async function payInstructorBookingDeposit(payer, user, item) {
         payment_id: orderId
       }
     });
-    console.log(tkResp);
   } catch (error) {
     console.log('TK ERROR ', error);
     throw new Error(

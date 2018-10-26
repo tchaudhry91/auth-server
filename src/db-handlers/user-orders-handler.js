@@ -4,7 +4,8 @@ import { id_gen } from '../utils/url-id-generator';
 import UserOrders from '../models/user-orders-model';
 import {
   ITEM_CATEGORY_COURSE_CERTIFICATE,
-  ITEM_CATEGORY_COURSE_RUN
+  ITEM_CATEGORY_COURSE_RUN,
+  ITEM_CATEGORY_DIGITAL_DIPLOMA_PLAN
 } from '../models/order-item-model';
 
 export const fetchByUserAndItemRefId = async (
@@ -23,6 +24,9 @@ export const fetchByUserAndItemRefId = async (
       break;
     case ITEM_CATEGORY_COURSE_RUN:
       queryVal['order_items.item_ref.cd_run_id'] = item_ref_id;
+      break;
+    case ITEM_CATEGORY_DIGITAL_DIPLOMA_PLAN:
+      queryVal['order_items.item_ref.dd_plan_id'] = item_ref_id;
       break;
   }
   logger.debug(`queryVal ` + JSON.stringify(queryVal));
