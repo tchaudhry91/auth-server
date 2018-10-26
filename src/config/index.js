@@ -112,15 +112,9 @@ export default {
     clientId: process.env.STRIPE_CONNECT_CLIENT_ID || 'set_me',
     redirectUri: process.env.STRIPE_CONNECT_REDIRECT_URI || 'https://auth-api.exlskills.com/stripe-connect/oauth/callback'
   },
-
-  stripePlans: {
-    creditsMetered: {
-      defaultCcy: 'USD',
-      planIds: {
-        USD: process.env.STRIPE_PLANS_CREDITS_METERED_USD_ID || 'set_me'
-      },
-      level: process.env.STRIPE_PLANS_CREDITS_METERED_LEVEL || 2000
-    }
+  stripeCredits: {
+    defaultCcy: 'USD',
+    level: process.env.STRIPE_CREDITS_SUB_LEVEL || 2000
   },
 
   logging_level:
