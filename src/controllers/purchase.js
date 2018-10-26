@@ -126,7 +126,7 @@ async function purchaseDigitalDiplomaPlan(payer, user, item) {
 
   const alreadyBought = await fetchByUserAndItemRefId(
     user._id,
-    ITEM_CATEGORY_COURSE_RUN,
+    ITEM_CATEGORY_DIGITAL_DIPLOMA_PLAN,
     dd_plan_id
   );
 

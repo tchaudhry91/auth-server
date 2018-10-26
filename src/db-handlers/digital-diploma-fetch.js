@@ -1,6 +1,5 @@
-import { logger } from '../utils/logger';
 import { basicFind } from './basic-query-handler';
-import DigitalDiploma from '../models/course-delivery-model';
+import DigitalDiploma from '../models/digital-diploma-model';
 
 export const fetchDigitalDiplomaById = async digitalDiplomaId => {
   let record;
@@ -10,7 +9,7 @@ export const fetchDigitalDiplomaById = async digitalDiplomaId => {
       { isById: true },
       digitalDiplomaId,
       null,
-      {}
+      null
     );
   } catch (errInternalAlreadyReported) {
     return null;
