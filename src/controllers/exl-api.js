@@ -63,16 +63,18 @@ async function purchaseCreditsForUser(apiKey, userID, purchaseN) {
     }
 
     const custId = dbUser.stripe ? dbUser.stripe.customer_id : null;
-    const creditsSubId = dbUser.stripe ? dbUser.stripe.credits_sub_id : null;
-    const creditsSubItemId = dbUser.stripe
-      ? dbUser.stripe.credits_sub_item_id
-      : null;
-    if (!custId || !creditsSubId || !creditsSubItemId) {
+    const cardSaved = dbUser.stripe ? dbUser.stripe.card_saved : null;
+    let prefCCY = dbUser.stripe ? dbUser.stripe.preferred_ccy : null;
+    if (!custId || !cardSaved) {
       return Promise.reject(ForbiddenError());
     }
-    await config.stripe.usageRecords.create(creditsSubItemId, {
-      quantity: purchaseN,
-      timestamp: Math.round(new Date().getTime() / 1000)
+    if (!!prefCCY) {
+      prefCCY = 'USD';
+    }
+    await config.stripe.charges.create({
+      currency: prefCCY,
+      amount: purchaseN, // NOTE: Stripe doesn't take floats, so we need to multiply 100 and then do a round to make sure it's an int
+      customer: custId
     });
     return {
       success: true
