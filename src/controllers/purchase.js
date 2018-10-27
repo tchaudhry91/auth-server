@@ -130,12 +130,13 @@ async function purchaseDigitalDiplomaPlan(payer, user, item) {
     dd_plan_id
   );
 
+  // TODO consider if users should be able to purhcase more than once
   // If the user has already purchased a seat, then return
-  if (alreadyBought) {
-    response.msg =
-      'The User has already purchased this digital diploma plan. No action is necessary ';
-    return response;
-  }
+  // if (alreadyBought) {
+  //   response.msg =
+  //     'The User has already purchased this digital diploma plan. No action is necessary ';
+  //   return response;
+  // }
 
   const digitalDiploma = await fetchDigitalDiplomaById(dd_id);
   logger.debug(` digitalDiploma ` + JSON.stringify(digitalDiploma));
