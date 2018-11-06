@@ -213,17 +213,16 @@ async function purchaseDigitalDiplomaPlan(payer, user, item) {
           <head>
           </head>
           <body>
-            <h3>Thank you for recent purchase of a ${getStringByLocale(ddPlan.title).text} for ${
+            <h3>Thank you for recent purchase of a ${getStringByLocale(ddPlan.title).text} Program for ${
               getStringByLocale(digitalDiploma.title).text
 } with ${config.platform.name}!</h3>
             <p>Your dedicated ${
               config.platform.name
 } Success Manager will be in touch within 24 hours with:</p>
             <ul>
-              <li>Links and credentials to all course content</li>
-              <li>Any extra required course materials/resources</li>
-              <li>An introduction to your instructor for the course</li>
-              <li>Shipping updates and tracking number(s) for your order</li>
+              <li>Access to all program materials/resources</li>
+              <li>An introduction to your instructor for the program</li>
+              <li>Shipping updates and tracking number(s) for your order (if applicable)</li>
             </ul>
             <p>If you have any questions in the meantime, please feel free to reach out to the ${
               config.platform.name
@@ -251,7 +250,7 @@ async function purchaseDigitalDiplomaPlan(payer, user, item) {
     await config.smtp.sendMail({
       from: config.notifications.email.from,
       to: config.platform.supportEmail,
-      subject: `${config.platform.name} Digital Diploma Order Notification`,
+      subject: `${config.platform.name} DD/GP Order Notification`,
       html: `<html>
       <head>
       </head>
