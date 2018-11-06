@@ -120,7 +120,7 @@ async function purchaseDigitalDiplomaPlan(payer, user, item) {
   const dd_plan_id = item.refs.dd_plan_id;
   const shipping_info = item.options.shipping_info;
 
-  if (!dd_id || !dd_plan_id || !shipping_info || !shipping_info.full_name || !shipping_info.addr_1 || !shipping_info.city || !shipping_info.state || !shipping_info.country || !shipping_info.zip_code) {
+  if (!dd_id || !dd_plan_id) {
     throw new Error('Purchase Info Details Missing');
   }
 
@@ -157,7 +157,10 @@ async function purchaseDigitalDiplomaPlan(payer, user, item) {
     throw new Error('Plan has already expired');
   }
   if (new Date().getTime() < ddPlan.opens_at.getTime()) {
-    throw new Error('Plan has already expired');
+    throw new Error('Plan is not yet available');
+  }
+  if (ddPlan.is_shipping_required && (!shipping_info || !shipping_info.full_name || !shipping_info.addr_1 || !shipping_info.city || !shipping_info.state || !shipping_info.country || !shipping_info.zip_code)) {
+    throw new Error('Missing required shipping info');
   }
 
   let amount = ddPlan.cost;
