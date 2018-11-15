@@ -148,6 +148,7 @@ async function enroll(cookies, stripeToken, ccy) {
       user.stripe.card_saved = true;
       if (user.subscription[0].level < config.stripeCredits.level) {
         user.subscription[0].level = config.stripeCredits.level;
+        user.markModified('subscription');
       }
       await user.save();
     } catch (err) {
@@ -181,6 +182,7 @@ async function unenroll(cookies) {
       }
       user.stripe.card_saved = false;
       user.subscription[0].level = 1;
+      user.markModified('subscription');
       await user.save();
     } catch (err) {
       console.log(err);
