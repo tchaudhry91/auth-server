@@ -159,7 +159,16 @@ async function purchaseDigitalDiplomaPlan(payer, user, item) {
   if (new Date().getTime() < ddPlan.opens_at.getTime()) {
     throw new Error('Plan is not yet available');
   }
-  if (ddPlan.is_shipping_required && (!shipping_info || !shipping_info.full_name || !shipping_info.addr_1 || !shipping_info.city || !shipping_info.state || !shipping_info.country || !shipping_info.zip_code)) {
+  if (
+    ddPlan.is_shipping_required &&
+    (!shipping_info ||
+      !shipping_info.full_name ||
+      !shipping_info.addr_1 ||
+      !shipping_info.city ||
+      !shipping_info.state ||
+      !shipping_info.country ||
+      !shipping_info.zip_code)
+  ) {
     throw new Error('Missing required shipping info');
   }
 
@@ -340,7 +349,7 @@ async function payInstructorBookingDeposit(payer, user, item) {
   }
 
   let notif_emails = [payer.primary_email];
-  if (payer.primary_email != user.primary_email) {
+  if (payer.primary_email !== user.primary_email) {
     notif_emails.push(user.primary_email);
   }
 

@@ -19,8 +19,7 @@ const UserSchema = new mongoose.Schema(
       default: id_gen
     },
     full_name: {
-      type: IntlStringSchema,
-      index: true
+      type: IntlStringSchema
     },
     headline: {
       type: IntlStringSchema
