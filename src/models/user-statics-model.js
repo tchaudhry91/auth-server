@@ -1,5 +1,8 @@
 import { logger } from '../utils/logger';
 import config from '../config';
+import { id_gen } from '../helpers/url-id-generator';
+import { basicFind } from '../db-handlers/basic-query-handler';
+import User from './user-model';
 
 const anonymousSuffixes = [
   'Panda',
@@ -46,6 +49,30 @@ function pickRandomAnonymousSuffix() {
 
 export async function createDumpUser() {
   let user = new this();
+  let user_id = id_gen();
+  while (true) {
+    let user_rec = null;
+    try {
+      user_rec = await basicFind(
+        User,
+        {
+          isById: true
+        },
+        user_id,
+        null,
+        { _id: 1 }
+      );
+    } catch (err) {
+      logger.error(`in createDumpUser ` + err);
+    }
+    if (!user_rec || !user_rec._id) {
+      logger.debug(`assigned User id ` + user_id);
+      break;
+    } else {
+      user_id = id_gen();
+    }
+  }
+  user._id = user_id;
   user.avatar_url = config.demoUser.avatarUrl;
   user.subscription = [
     {
