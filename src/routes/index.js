@@ -13,7 +13,8 @@ const {
   exlAPI,
   credits,
   purchase,
-  stripeConnect
+  stripeConnect,
+  mailingList
 } = controllers;
 
 /**
@@ -123,6 +124,11 @@ router.get(
 router.get(
   '/stripe-connect/oauth/callback',
   c(stripeConnect.stripeOAuthCallback, req => [req.cookies, req.query.code, req.query.state])
+);
+
+router.post(
+  '/mailing-list',
+  c(mailingList.subscribeToMailingList, req => [req.cookies, req.body.email, req.body.campaign])
 );
 
 /**
