@@ -18,6 +18,9 @@ const MailingListSchema = new mongoose.Schema(
     campaign: {
       type: String
     },
+    form_url: {
+      type: String
+    },
     email: {
       type: String,
       required: true

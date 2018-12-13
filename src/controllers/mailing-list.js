@@ -6,7 +6,7 @@ import config from '../config';
 import { ForbiddenError, BadRequestError, InternalServerError } from '../helpers/server';
 import { validateEmail } from '../utils/email';
 
-export async function subscribeToMailingList(cookies, emailAddr, campaign) {
+export async function subscribeToMailingList(cookies, emailAddr, campaign, formUrl) {
   logger.debug(`in subscribeToMailingList`);
   logger.debug(decodeToken(cookies[config.jwt.cookieName]).user_id);
   let user;
@@ -23,13 +23,17 @@ export async function subscribeToMailingList(cookies, emailAddr, campaign) {
   if (!campaign) {
     campaign = '_unknown';
   }
+  if (!formUrl) {
+    formUrl = '_unknown';
+  }
 
   try {
     MailingList.create({
       user_id: user._id,
       locale: 'en',
       email: emailAddr,
-      campaign: campaign
+      campaign: campaign,
+      form_url: formUrl
     });
   } catch (error) {
     return Promise.reject(InternalServerError());
