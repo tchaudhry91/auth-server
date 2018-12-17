@@ -128,7 +128,7 @@ router.get(
 
 router.post(
   '/mailing-list',
-  c(mailingList.subscribeToMailingList, req => [req.cookies, req.body.email, req.body.campaign, req.body.formUrl])
+  c(mailingList.subscribeToMailingList, req => [req.cookies, req.get('X-Forwarded-For') || req.connection.remoteAddress, req.body.email, req.body.campaign, req.body.formUrl])
 );
 
 /**

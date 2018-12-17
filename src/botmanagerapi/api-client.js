@@ -1,4 +1,4 @@
-import config from '../config'
+import config from '../config';
 import Axios from 'axios';
 
 export const botManagerApiClient = (() => {
