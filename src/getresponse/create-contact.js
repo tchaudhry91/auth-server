@@ -13,14 +13,13 @@ export async function createContact(campaignId, userId, email, name, ipAddress, 
     campaign: {
       campaignId
     },
-    dayOfCycle: 0
-    // TODO Supply user ID, however, currently there's a bug with the GR API...
-    // customFieldValues: [
-    //   {
-    //     customFieldId: 'user_id',
-    //     value: [userId]
-    //   }
-    // ]
+    dayOfCycle: 0,
+    customFieldValues: [
+      {
+        customFieldId: config.getResponseAPI.userIdPropertyId,
+        value: [userId]
+      }
+    ]
   };
   if (name) {
     postObj.name = name;
