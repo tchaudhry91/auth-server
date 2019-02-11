@@ -80,7 +80,7 @@
     "mocha": "^5.2.0",
     "mockery": "^2.0.0",
     "node-fetch": "^1.6.3",
-    "nodemon": "^1.18.3",
+    "nodemon": "^1.18.10",
     "prettier": "^1.7.3",
     "sinon": "^2.0.0"
   }
