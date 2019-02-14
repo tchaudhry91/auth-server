@@ -15,6 +15,7 @@ timekit.configure({
 export default {
   environment: process.env.NODE_ENV,
   memcachedUrl: process.env.MEMCACHED_URL,
+  memcachedPrefix: process.env.MEMCACHED_PREFIX || 'prod',
   sessionSecret: process.env.SESSION_SECRET || 'set_me',
   mongo: {
     uri: process.env.DB_URI || 'mongodb://localhost:27017',

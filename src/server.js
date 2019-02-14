@@ -31,8 +31,10 @@ var sessionConfig = {
 };
 
 if (config.environment === 'production') {
+  logger.debug(`activating Memcached`);
   sessionConfig.store = new MemcachedStore({
-    hosts: [config.memcachedUrl]
+    hosts: [config.memcachedUrl],
+    prefix: config.memcachedPrefix
   });
   sessionConfig.key = 'authsess';
   sessionConfig.proxy = true;
