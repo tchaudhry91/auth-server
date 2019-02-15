@@ -8,7 +8,7 @@ import { spendBoosts } from '../botmanagerapi/spend-boosts';
 import {
   fetchByUserAndItemRefId,
   insertOrderRecord
-} from '../db-handlers/user-orders-handler';
+} from '../db-handlers/user-order-handler';
 import { fetchDeliveryStructurePricingById } from '../db-handlers/course-delivery-price-fetch';
 import { fetchDigitalDiplomaById } from '../db-handlers/digital-diploma-fetch';
 import { basicFind } from '../db-handlers/basic-query-handler';

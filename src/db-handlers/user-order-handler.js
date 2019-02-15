@@ -1,7 +1,7 @@
 import { logger } from '../utils/logger';
 import { basicFind } from './basic-query-handler';
 import { id_gen } from '../utils/url-id-generator';
-import UserOrders from '../models/user-orders-model';
+import UserOrder from '../models/user-order-model';
 import {
   ITEM_CATEGORY_COURSE_CERTIFICATE,
   ITEM_CATEGORY_COURSE_RUN,
@@ -32,7 +32,7 @@ export const fetchByUserAndItemRefId = async (
   logger.debug(`queryVal ` + JSON.stringify(queryVal));
   let record;
   try {
-    record = await basicFind(UserOrders, { isOne: true }, queryVal, null, null);
+    record = await basicFind(UserOrder, { isOne: true }, queryVal, null, null);
   } catch (errInternalAlreadyReported) {
     return null;
   }
@@ -49,7 +49,7 @@ export const insertOrderRecord = async (user_id, payer_id, itemObjArray) => {
     order_items: itemObjArray
   };
   let promises = [];
-  promises.push(UserOrders.create(userOrdersObj));
+  promises.push(UserOrder.create(userOrdersObj));
   await Promise.all(promises);
   logger.debug(`Order Record inserted with ID ` + order_id);
   return order_id;
