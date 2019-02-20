@@ -14,6 +14,7 @@ const {
   credits,
   purchase,
   stripeConnect,
+  phoneAuth,
   mailingList
 } = controllers;
 
@@ -129,6 +130,16 @@ router.get(
 router.post(
   '/mailing-list',
   c(mailingList.subscribeToMailingList, req => [req.cookies, req.get('X-Forwarded-For') || req.connection.remoteAddress, req.body.email, req.body.campaign, req.body.formUrl])
+);
+
+router.post(
+  '/auth/phone',
+  c(phoneAuth.postSendCode, req => [req.cookies, req.body.phoneNumber, req.body.countryIso2])
+);
+
+router.post(
+  '/auth/phone/code',
+  c(phoneAuth.postVerifyCode, req => [req.cookies, req.body.code])
 );
 
 /**

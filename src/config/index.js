@@ -116,6 +116,18 @@ export default {
     }
   },
 
+  twilio: {
+    accountSID: process.env.TWILIO_ACCOUNT_SID || 'set_me',
+    authToken: process.env.TWILIO_AUTH_TOKEN || 'set_me',
+    numbers: {
+      default: process.env.TWILIO_NUMBER_DEFAULT || '+1set_me',
+      countries: {
+        in: process.env.TWILIO_NUMBER_IN || '+91set_me',
+        us: process.env.TWILIO_NUMBER_US || '+1set_me'
+      }
+    }
+  },
+
   stripe: require('stripe')(process.env.STRIPE_SECRET_KEY || 'set_me'),
 
   stripeConnect: {

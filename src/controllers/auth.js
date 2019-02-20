@@ -13,7 +13,7 @@ import path from 'path';
 
 const pixel = fs.readFileSync(path.join(__dirname, '../assets/pixel.gif'));
 
-function getAuthResponseCookies(token) {
+export function getAuthResponseCookies(token) {
   return [
     {
       name: config.jwt.cookieName,
@@ -35,7 +35,7 @@ function getAuthResponseCookies(token) {
   ];
 }
 
-function clearAuthCookies() {
+export function clearAuthCookies() {
   return [
     {
       name: config.jwt.cookieName,
@@ -57,13 +57,13 @@ function clearAuthCookies() {
   ];
 }
 
-async function logout() {
+export async function logout() {
   return {
     cookies: clearAuthCookies()
   };
 }
 
-async function finalizeKeycloakAuth(user, cookies) {
+export async function finalizeKeycloakAuth(user, cookies) {
   const jwtToken = generateToken(user);
   return {
     cookies: getAuthResponseCookies(jwtToken),
@@ -71,7 +71,7 @@ async function finalizeKeycloakAuth(user, cookies) {
   };
 }
 
-async function anonymousAccessGIF(req, res, next) {
+export async function anonymousAccessGIF(req, res, next) {
   let resCookies = [];
   const cookieName = config.jwt.cookieName;
   const existingToken = req.cookies[cookieName];
@@ -106,7 +106,7 @@ async function anonymousAccessGIF(req, res, next) {
   res.end(pixel);
 }
 
-async function jwtRefresh(cookies) {
+export async function jwtRefresh(cookies) {
   const existingToken = cookies[config.jwt.cookieName];
   let user;
   if (existingToken) {
@@ -149,7 +149,7 @@ async function jwtRefresh(cookies) {
   };
 }
 
-async function anonymousAccess(cookies, redirect) {
+export async function anonymousAccess(cookies, redirect) {
   const cookieName = config.jwt.cookieName;
   const existingToken = cookies[cookieName];
   let user;
@@ -199,7 +199,7 @@ async function anonymousAccess(cookies, redirect) {
   return response;
 }
 
-async function intercomUserHash(cookies) {
+export async function intercomUserHash(cookies) {
   const tknStr = cookies[config.jwt.cookieName];
   if (!tknStr) {
     return Promise.reject(ForbiddenError());
@@ -219,12 +219,3 @@ async function intercomUserHash(cookies) {
     userIdHash: generateIntercomHash(token.user_id)
   });
 }
-
-module.exports = {
-  logout,
-  jwtRefresh,
-  anonymousAccess,
-  anonymousAccessGIF,
-  intercomUserHash,
-  finalizeKeycloakAuth
-};
