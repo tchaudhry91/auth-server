@@ -1,3 +1,4 @@
+import { stringify } from 'flatted/cjs';
 import config from '../config';
 import User from '../models/user-model';
 import { ForbiddenError } from '../helpers/server';
@@ -10,6 +11,7 @@ import {
 import { generateIntercomHash } from '../helpers/intercom';
 import fs from 'fs';
 import path from 'path';
+import { logger } from '../utils/logger';
 
 const pixel = fs.readFileSync(path.join(__dirname, '../assets/pixel.gif'));
 
@@ -149,7 +151,9 @@ async function jwtRefresh(cookies) {
   };
 }
 
-async function anonymousAccess(cookies, redirect) {
+async function anonymousAccess(req, cookies, redirect) {
+  logger.debug(`In anonymousAccess ` + req.body);
+
   const cookieName = config.jwt.cookieName;
   const existingToken = cookies[cookieName];
   let user;
@@ -179,8 +183,11 @@ async function anonymousAccess(cookies, redirect) {
     status: 'OK',
     redirect
   };
+
   if (!user) {
-    user = await User.createDumpUser();
+    const userLocale = req.body && req.body.locale ? req.body.locale : 'en';
+
+    user = await User.createDumpUser(userLocale);
     const jwtToken = generateToken(user);
     response.cookies = getAuthResponseCookies(jwtToken);
   }

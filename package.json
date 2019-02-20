@@ -50,6 +50,7 @@
     "express": "^4.14.1",
     "express-session": "^1.15.1",
     "file-system": "^2.2.2",
+    "flatted": "^1.0.2",
     "http": "0.0.0",
     "https-proxy-agent": "2.2.0",
     "jsonwebtoken": "^8.0.1",

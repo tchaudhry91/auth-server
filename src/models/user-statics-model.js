@@ -47,8 +47,11 @@ function pickRandomAnonymousSuffix() {
   ];
 }
 
-export async function createDumpUser() {
+export async function createDumpUser(userLocale) {
+  logger.debug(`In createDumpUser ` + userLocale);
   let user = new this();
+
+  // Ensure generated User ID is not in the DB
   let user_id = id_gen();
   while (true) {
     let user_rec = null;
@@ -73,6 +76,7 @@ export async function createDumpUser() {
     }
   }
   user._id = user_id;
+  user.primary_locale = userLocale;
   user.avatar_url = config.demoUser.avatarUrl;
   user.subscription = [
     {
