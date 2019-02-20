@@ -123,11 +123,12 @@ export async function postVerifyCode(cookies, code) {
       await user.save();
     }
     const refreshedJwtToken = generateToken(user);
+    console.log(user)
     return {
       cookies: getAuthResponseCookies(refreshedJwtToken),
       success: true,
-      promptFullName: !!user.full_name,
-      promptEmail: !!user.primary_email
+      promptFullName: !user.full_name || !user.full_name.intlString,
+      promptEmail: !user.primary_email || user.primary_email === ''
     };
   } catch (e) {
     return Promise.reject(InternalServerError());

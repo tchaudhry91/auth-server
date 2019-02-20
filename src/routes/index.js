@@ -58,7 +58,9 @@ router.post(
   c(auth.anonymousAccess, req => [req.cookies, req.query.redirect])
 );
 router.get('/anonymous.gif', auth.anonymousAccessGIF);
+// TODO perhaps we can remove the GET refresh endpoint (GET can cause problems with caching on the browser, POST will clear the cache for a token refresh)
 router.get('/auth/jwt-refresh', c(auth.jwtRefresh, req => [req.cookies]));
+router.post('/auth/jwt-refresh', c(auth.jwtRefresh, req => [req.cookies]));
 router.post(
   '/intercom-user-hash',
   c(auth.intercomUserHash, req => [req.cookies])
