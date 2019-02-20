@@ -123,7 +123,6 @@ export async function postVerifyCode(cookies, code) {
       await user.save();
     }
     const refreshedJwtToken = generateToken(user);
-    console.log(user)
     return {
       cookies: getAuthResponseCookies(refreshedJwtToken),
       success: true,
