@@ -159,7 +159,12 @@ export async function authenticate(method, profile, userId) {
   } else {
     user.is_demo = false;
     user.is_verified = true;
-    user.primary_locale = profile.locale;
+
+    // Set locale only if not already on the record
+    user.primary_locale = user.primary_locale
+      ? user.primary_locale
+      : profile.locale;
+
     if (profile.avatar) {
       user.avatar_url = profile.avatar;
     }
