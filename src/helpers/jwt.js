@@ -80,11 +80,10 @@ export const generateToken = user => {
   return jwtToken;
 };
 
-export const decodeToken = token => {
-  return jwt.verify(token, jwtPublicKey, {
+export const decodeToken = token =>
+  jwt.verify(token, jwtPublicKey, {
     algorithm: 'RS256'
   });
-};
 
 export const getRawDataPartFromToken = token => {
   let startPos = token.indexOf('.') + 1;

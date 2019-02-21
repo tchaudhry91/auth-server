@@ -55,7 +55,7 @@ const c = controllerHandler;
  */
 router.post(
   '/anonymous',
-  c(auth.anonymousAccess, req => [req.cookies, req.query.redirect])
+  c(auth.anonymousAccess, req => [req, req.cookies, req.query.redirect])
 );
 router.get('/anonymous.gif', auth.anonymousAccessGIF);
 // TODO perhaps we can remove the GET refresh endpoint (GET can cause problems with caching on the browser, POST will clear the cache for a token refresh)
@@ -117,21 +117,39 @@ router.post('/me/logout', c(auth.logout, req => [req.cookies]));
 
 router.post(
   '/purchase',
-  c(purchase.purchaseHandler, req => [req.cookies, req.body.payer_user_id, req.body.user_id, req.body.item])
+  c(purchase.purchaseHandler, req => [
+    req.cookies,
+    req.body.payer_user_id,
+    req.body.user_id,
+    req.body.item
+  ])
 );
 
 router.get(
   '/stripe-connect/oauth/redirect',
-  c(stripeConnect.stripeOAuthRedirect, req => [req.cookies, req.query.redirectUrl])
+  c(stripeConnect.stripeOAuthRedirect, req => [
+    req.cookies,
+    req.query.redirectUrl
+  ])
 );
 router.get(
   '/stripe-connect/oauth/callback',
-  c(stripeConnect.stripeOAuthCallback, req => [req.cookies, req.query.code, req.query.state])
+  c(stripeConnect.stripeOAuthCallback, req => [
+    req.cookies,
+    req.query.code,
+    req.query.state
+  ])
 );
 
 router.post(
   '/mailing-list',
-  c(mailingList.subscribeToMailingList, req => [req.cookies, req.get('X-Forwarded-For') || req.connection.remoteAddress, req.body.email, req.body.campaign, req.body.formUrl])
+  c(mailingList.subscribeToMailingList, req => [
+    req.cookies,
+    req.get('X-Forwarded-For') || req.connection.remoteAddress,
+    req.body.email,
+    req.body.campaign,
+    req.body.formUrl
+  ])
 );
 
 router.post(
@@ -158,6 +176,7 @@ router.use((err, req, res, _next) => {
 
   logger.error('~~~ Unexpected error exception start ~~~');
   logger.error(err);
+  logger.error(err.stack);
   logger.error('~~~ Unexpected error exception end ~~~');
 
   return res.status(500).json({

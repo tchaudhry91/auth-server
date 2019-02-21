@@ -3,12 +3,22 @@ import User from '../models/user-model';
 import MailingList from '../models/mailing-list-model';
 import { decodeToken } from '../helpers/jwt';
 import config from '../config';
-import { ForbiddenError, BadRequestError, InternalServerError } from '../helpers/server';
+import {
+  ForbiddenError,
+  BadRequestError,
+  InternalServerError
+} from '../helpers/server';
 import { validateEmail } from '../utils/email';
 import { createContact } from '../getresponse/create-contact';
-import { getStringByLocale } from "../helpers/intl-string";
+import { getStringByLocale } from '../helpers/intl-string';
 
-export async function subscribeToMailingList(cookies, reqIpAddr, emailAddr, campaign, formUrl) {
+export async function subscribeToMailingList(
+  cookies,
+  reqIpAddr,
+  emailAddr,
+  campaign,
+  formUrl
+) {
   logger.debug(`in subscribeToMailingList`);
   logger.debug(decodeToken(cookies[config.jwt.cookieName]).user_id);
   let user;
@@ -51,7 +61,14 @@ export async function subscribeToMailingList(cookies, reqIpAddr, emailAddr, camp
     userFullName = undefined;
   }
   try {
-    await createContact(config.getResponseAPI.campaings[campaign], user._id, emailAddr, userFullName, reqIpAddr, true);
+    await createContact(
+      config.getResponseAPI.campaings[campaign],
+      user._id,
+      emailAddr,
+      userFullName,
+      reqIpAddr,
+      true
+    );
   } catch (error) {
     // console.log(error);
     return Promise.reject(InternalServerError());
