@@ -12,6 +12,7 @@ import {
 import { generateFixedLengthCode } from '../utils/fixed-length-code';
 import { selectTwilioNumberForCountry, standardizePhoneNumber } from "../utils/twilio";
 import { getAuthResponseCookies } from "./auth";
+import { getStringByLocale } from "../helpers/intl-string";
 
 const twilioClient = new twilio(
   config.twilio.accountSID,
@@ -110,6 +111,7 @@ export async function postVerifyCode(cookies, code) {
     return Promise.reject(BadRequestError('Invalid/expired code'));
   }
 
+  let wasDemoUser = false;
   try {
     let matchedUser = await User.findOne({
       phone_number: phoneNumber
@@ -117,6 +119,7 @@ export async function postVerifyCode(cookies, code) {
     if (matchedUser) {
       user = matchedUser;
     } else {
+      wasDemoUser = user.is_demo;
       user.phone_number = phoneNumber;
       user.is_demo = false;
       user.is_verified = true;
@@ -126,8 +129,8 @@ export async function postVerifyCode(cookies, code) {
     return {
       cookies: getAuthResponseCookies(refreshedJwtToken),
       success: true,
-      promptFullName: !user.full_name || !user.full_name.intlString,
-      promptEmail: !user.primary_email || user.primary_email === ''
+      promptFullName: wasDemoUser || !user.full_name || !user.full_name.intlString || getStringByLocale(user.full_name).err || getStringByLocale(user.full_name).text.startsWith('Anonymous'),
+      promptEmail: wasDemoUser || !user.primary_email || user.primary_email === ''
     };
   } catch (e) {
     return Promise.reject(InternalServerError());
