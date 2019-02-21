@@ -28,6 +28,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       index: true
     },
+    phone_number: {
+      type: String,
+      index: true
+    },
     primary_email: {
       type: String,
       index: true

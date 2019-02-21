@@ -14,6 +14,7 @@ const {
   credits,
   purchase,
   stripeConnect,
+  phoneAuth,
   mailingList
 } = controllers;
 
@@ -57,7 +58,9 @@ router.post(
   c(auth.anonymousAccess, req => [req, req.cookies, req.query.redirect])
 );
 router.get('/anonymous.gif', auth.anonymousAccessGIF);
+// TODO perhaps we can remove the GET refresh endpoint (GET can cause problems with caching on the browser, POST will clear the cache for a token refresh)
 router.get('/auth/jwt-refresh', c(auth.jwtRefresh, req => [req.cookies]));
+router.post('/auth/jwt-refresh', c(auth.jwtRefresh, req => [req.cookies]));
 router.post(
   '/intercom-user-hash',
   c(auth.intercomUserHash, req => [req.cookies])
@@ -147,6 +150,16 @@ router.post(
     req.body.campaign,
     req.body.formUrl
   ])
+);
+
+router.post(
+  '/auth/phone',
+  c(phoneAuth.postSendCode, req => [req.cookies, req.body.phoneNumber, req.body.countryIso2])
+);
+
+router.post(
+  '/auth/phone/code',
+  c(phoneAuth.postVerifyCode, req => [req.cookies, req.body.code])
 );
 
 /**
