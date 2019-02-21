@@ -85,4 +85,8 @@ DigitalDiplomaSchema.index(
   }
 );
 
-export default mongoose.model('DigitalDiploma', DigitalDiplomaSchema, 'digital_diploma');
+export default mongoose.model(
+  'DigitalDiploma',
+  DigitalDiplomaSchema,
+  'digital_diploma'
+);

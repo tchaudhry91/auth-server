@@ -1,7 +1,7 @@
 import twilio from 'twilio';
 import PhoneAuthToken from '../models/phone-auth-token-model';
 import User from '../models/user-model';
-import { decodeToken, generateToken } from "../helpers/jwt";
+import { decodeToken, generateToken } from '../helpers/jwt';
 import config from '../config';
 import { logger } from '../utils/logger';
 import {
@@ -10,9 +10,14 @@ import {
   InternalServerError
 } from '../helpers/server';
 import { generateFixedLengthCode } from '../utils/fixed-length-code';
-import { selectTwilioNumberForCountry, standardizePhoneNumber } from "../utils/twilio";
-import { getAuthResponseCookies } from "./auth";
-import { getStringByLocale } from "../helpers/intl-string";
+import {
+  selectTwilioNumberForCountry,
+  standardizePhoneNumber
+} from '../utils/twilio';
+import { getAuthResponseCookies } from './auth';
+import { getStringByLocale } from '../helpers/intl-string';
+
+logger.debug(`twilio ` + JSON.stringify(config.twilio));
 
 const twilioClient = new twilio(
   config.twilio.accountSID,
@@ -129,8 +134,14 @@ export async function postVerifyCode(cookies, code) {
     return {
       cookies: getAuthResponseCookies(refreshedJwtToken),
       success: true,
-      promptFullName: wasDemoUser || !user.full_name || !user.full_name.intlString || getStringByLocale(user.full_name).err || getStringByLocale(user.full_name).text.startsWith('Anonymous'),
-      promptEmail: wasDemoUser || !user.primary_email || user.primary_email === ''
+      promptFullName:
+        wasDemoUser ||
+        !user.full_name ||
+        !user.full_name.intlString ||
+        getStringByLocale(user.full_name).err ||
+        getStringByLocale(user.full_name).text.startsWith('Anonymous'),
+      promptEmail:
+        wasDemoUser || !user.primary_email || user.primary_email === ''
     };
   } catch (e) {
     return Promise.reject(InternalServerError());

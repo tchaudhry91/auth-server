@@ -32,4 +32,10 @@ const PhoneAuthTokenSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model('PhoneAuthToken', PhoneAuthTokenSchema, 'phone_auth_token');
+PhoneAuthTokenSchema.index({ code: 1, user_id: 1, verified: 1 });
+
+export default mongoose.model(
+  'PhoneAuthToken',
+  PhoneAuthTokenSchema,
+  'phone_auth_token'
+);
