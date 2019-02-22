@@ -29,8 +29,8 @@ const UserSchema = new mongoose.Schema(
       index: true
     },
     phone_number: {
-      type: String,
-      index: true
+      type: String
+      // Gets a sparse index
     },
     primary_email: {
       type: String,
@@ -100,6 +100,8 @@ const UserSchema = new mongoose.Schema(
 UserSchema.index({
   'auth_strategies.auth_id': 1
 });
+
+UserSchema.index({ phone_number: 1 }, { sparse: true });
 
 UserSchema.statics.authenticate = authenticate;
 UserSchema.statics.createDumpUser = createDumpUser;
