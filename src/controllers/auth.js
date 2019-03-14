@@ -21,17 +21,20 @@ export function getAuthResponseCookies(token) {
       name: config.jwt.cookieName,
       value: token,
       options: {
-        expire: new Date(new Date() + 30 * 24 * 60 * 60 * 1000),
+        maxAge: 30 * 24 * 60 * 60 * 12 * 1000,
         httpOnly: true,
-        domain: config.cookies.domain
+        secure: process.env.NODE_ENV == 'production' ? true : undefined,
+        domain: config.cookies.domain,
+        path: '/'
       }
     },
     {
       name: config.userDataCookieName,
       value: getRawDataPartFromToken(token),
       options: {
-        expire: new Date(new Date() + 30 * 24 * 60 * 60 * 1000),
-        domain: config.cookies.domain
+        maxAge: 30 * 24 * 60 * 60 * 12 * 1000,
+        domain: config.cookies.domain,
+        path: '/'
       }
     }
   ];
@@ -43,7 +46,7 @@ export function clearAuthCookies() {
       name: config.jwt.cookieName,
       value: '',
       options: {
-        expire: new Date(new Date() - 30 * 24 * 60 * 60 * 1000),
+        maxAge: 0,
         httpOnly: true,
         domain: config.cookies.domain
       }
@@ -52,7 +55,7 @@ export function clearAuthCookies() {
       name: config.userDataCookieName,
       value: '',
       options: {
-        expire: new Date(new Date() - 30 * 24 * 60 * 60 * 1000),
+        maxAge: 0,
         domain: config.cookies.domain
       }
     }
