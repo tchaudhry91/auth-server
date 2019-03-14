@@ -34,7 +34,7 @@ const controllerHandler = (promise, params) => async (req, res, next) => {
         const { name, value, options } = cookie;
         res.cookie(name, value, options);
       }
-      // delete result.cookies;
+      delete result.cookies;
     }
     if (result && result.redirect) {
       return res.redirect(result.redirect);
