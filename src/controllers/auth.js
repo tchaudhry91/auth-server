@@ -127,6 +127,7 @@ export async function jwtRefresh(cookies) {
         })
           .select({
             _id: 1,
+            phone_number: 1,
             primary_locale: 1,
             primary_email: 1,
             avatar_url: 1,
@@ -170,6 +171,7 @@ export async function anonymousAccess(req, cookies, redirect) {
         .select({
           _id: 1,
           full_name: 1,
+          phone_number: 1,
           primary_locale: 1,
           avatar_url: 1,
           subscription: 1
@@ -193,6 +195,7 @@ export async function anonymousAccess(req, cookies, redirect) {
 
   response.user = {
     user_id: user._id,
+    phone_number: user.phone_number,
     full_name: getStringByLocale(user.full_name, user.primary_locale).text,
     locale: user.primary_locale,
     avatar_url: user.avatar_url,

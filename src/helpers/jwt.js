@@ -61,6 +61,7 @@ export const generateToken = user => {
   const jwtToken = jwt.sign(
     {
       user_id: user._id,
+      phone_number: user.phone_number,
       locale: user.primary_locale,
       email: user.primary_email,
       avatar_url: user.avatar_url,
