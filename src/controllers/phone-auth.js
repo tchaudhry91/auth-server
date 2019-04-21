@@ -69,6 +69,7 @@ export async function postSendCode(cookies, phoneNumber, countryIso2) {
     logger.error('Error sending twilio message: ' + err);
     return Promise.reject(InternalServerError());
   }
+  logger.debug(`Sent SMS Code: ${code}`);
   return {
     success: true
   };
