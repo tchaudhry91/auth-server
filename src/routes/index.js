@@ -15,7 +15,8 @@ const {
   purchase,
   stripeConnect,
   phoneAuth,
-  mailingList
+  mailingList,
+  infoAPI
 } = controllers;
 
 /**
@@ -67,6 +68,10 @@ router.post(
 );
 
 router.get('/health-check', c(healthCheck.healthCheckIndex, req => []));
+
+router.get('/info/geoloc', (req, res, next) => {
+  Promise.resolve(infoAPI.getUserGeoLocFromIp(req, res)).catch(next);
+});
 
 router.get(
   '/exl/users/:userId/subscription',
@@ -154,7 +159,11 @@ router.post(
 
 router.post(
   '/auth/phone',
-  c(phoneAuth.postSendCode, req => [req.cookies, req.body.phoneNumber, req.body.countryIso2])
+  c(phoneAuth.postSendCode, req => [
+    req.cookies,
+    req.body.phoneNumber,
+    req.body.countryIso2
+  ])
 );
 
 router.post(

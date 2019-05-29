@@ -53,6 +53,7 @@
     "flatted": "^1.0.2",
     "http": "0.0.0",
     "https-proxy-agent": "2.2.0",
+    "ipaddr.js": "^1.9.0",
     "jsonwebtoken": "^8.0.1",
     "mongoose": "^5.3.1",
     "nodemailer": "^4.6.8",
