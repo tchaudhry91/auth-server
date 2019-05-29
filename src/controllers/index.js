@@ -6,6 +6,7 @@ const purchase = require('./purchase');
 const phoneAuth = require('./phone-auth');
 const mailingList = require('./mailing-list');
 const stripeConnect = require('./stripe-connect');
+const infoAPI = require('./info-api');
 
 module.exports = {
   auth,
@@ -15,5 +16,6 @@ module.exports = {
   purchase,
   phoneAuth,
   stripeConnect,
-  mailingList
+  mailingList,
+  infoAPI
 };
