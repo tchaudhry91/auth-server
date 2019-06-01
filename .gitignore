@@ -10,3 +10,5 @@ build
 .docker_run.env
 
 npm-debug.log
+
+yarn.lock
