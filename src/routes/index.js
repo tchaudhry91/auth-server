@@ -16,6 +16,7 @@ const {
   stripeConnect,
   phoneAuth,
   mailingList,
+  surveyResponses,
   infoAPI
 } = controllers;
 
@@ -154,6 +155,37 @@ router.post(
     req.body.email,
     req.body.campaign,
     req.body.formUrl
+  ])
+);
+
+router.put(
+  '/surveys/:campaign/my-response',
+  c(surveyResponses.putSurveyResponseMeta, req => [
+    req.cookies,
+    req.get('X-Forwarded-For') || req.connection.remoteAddress,
+    req.body.email,
+    req.body.phoneNumber,
+    req.body.fullName,
+    req.params.campaign,
+    req.body.formUrl
+  ])
+);
+
+router.put(
+  '/surveys/:campaign/my-response/answers/:answerKey',
+  c(surveyResponses.putSurveyResponseAnswer, req => [
+    req.cookies,
+    req.params.campaign,
+    req.params.answerKey,
+    req.body.answerJson
+  ])
+);
+
+router.get(
+  '/surveys/:campaign/my-response',
+  c(surveyResponses.getSurveyResponse, req => [
+    req.cookies,
+    req.params.campaign
   ])
 );
 
