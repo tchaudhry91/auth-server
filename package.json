@@ -39,7 +39,7 @@
   "dependencies": {
     "@exlinc/keycloak-passport": "^1.0.2",
     "app-root-path": "^2.1.0",
-    "axios": "^0.18.0",
+    "axios": "^0.19.0",
     "better-npm-run": "^0.1.0",
     "body-parser": "^1.16.1",
     "connect-memcached": "^1.0.0",
