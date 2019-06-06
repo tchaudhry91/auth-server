@@ -185,7 +185,7 @@ export async function putSurveyResponseMeta(
   } catch (error) {
     return Promise.reject(InternalServerError());
   }
-  if (campaign === '_unknown' || !config.getResponseAPI.campaings[campaign]) {
+  if (campaign === '_unknown' || !config.getResponseAPI.campaigns[campaign]) {
     // Nothing else left for us to try
     return {
       success: true
@@ -201,7 +201,7 @@ export async function putSurveyResponseMeta(
   }
   try {
     await createContact(
-      config.getResponseAPI.campaings[campaign],
+      config.getResponseAPI.campaigns[campaign],
       user._id,
       emailAddr,
       userFullName,

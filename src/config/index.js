@@ -109,10 +109,11 @@ export default {
     authToken: process.env.GET_RESPONSE_API_AUTH_TOKEN || 'api-key set_me',
     url: process.env.GET_RESPONSE_API_URL || 'https://api.getresponse.com/v3',
     userIdPropertyId: process.env.GET_RESPONSE_USER_ID_PROP_ID || 'bGMQu',
-    campaings: {
+    campaigns: {
       'landing_page_sub_0': '8WFgu',
       'co_get_job_dd_sub_0': '8WF3t',
-      'co_get_raise_dd_sub_0': '8WFmQ'
+      'co_get_raise_dd_sub_0': '8WFmQ',
+      'exp_sur_par_0': 'yWdUe'
     }
   },
 
