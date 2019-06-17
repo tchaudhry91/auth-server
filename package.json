@@ -60,7 +60,7 @@
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
     "stripe": "^6.10.0",
-    "timekit-sdk": "^1.17.1",
+    "timekit-sdk": "^1.18.1",
     "twilio": "^3.28.1",
     "validator": "^7.0.0",
     "winston": "^3.0.0"
@@ -79,7 +79,7 @@
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-prettier": "^2.3.1",
     "fetch-absolute": "^1.0.0",
-    "istanbul": "^1.1.0-alpha.1",
+    "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
     "mockery": "^2.0.0",
     "node-fetch": "^1.6.3",
