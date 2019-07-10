@@ -52,6 +52,11 @@ const UserSchema = new mongoose.Schema(
       required: true,
       default: false
     },
+    is_learn_admin: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
     primary_locale: {
       type: String,
       default: 'en',

@@ -68,6 +68,7 @@ export const generateToken = user => {
       full_name: full_name,
       username: user.username,
       is_demo: user.is_demo,
+      is_learn_admin: user.is_learn_admin,
       has_completed_first_tutorial: user.has_completed_first_tutorial,
       is_verified: user.is_verified,
       subscription: user.subscription

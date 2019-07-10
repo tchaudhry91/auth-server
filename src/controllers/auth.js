@@ -137,6 +137,7 @@ export async function jwtRefresh(cookies) {
             full_name: 1,
             username: 1,
             is_demo: 1,
+            is_learn_admin: 1,
             has_completed_first_tutorial: 1,
             is_verified: 1,
             subscription: 1

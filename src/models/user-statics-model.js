@@ -85,6 +85,7 @@ export async function createDumpUser(userLocale) {
   ];
   user.auth_strategies = [];
   user.is_verified = false;
+  user.is_learn_admin = false;
   user.full_name = {
     intlString: [
       {
